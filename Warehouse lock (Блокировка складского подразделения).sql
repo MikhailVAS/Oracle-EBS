@@ -1,0 +1,19 @@
+-- Warehouse lock
+update INV.MTL_SECONDARY_INVENTORIES SI
+set DISABLE_DATE = null
+, AVAILABILITY_TYPE = 1
+, STATUS_ID = 1
+where 1=1 
+--and ORGANIZATION_ID = 96
+and SECONDARY_INVENTORY_NAME in (
+'5191'
+)
+
+-- Warehouse lock
+update INV.MTL_SECONDARY_INVENTORIES SI
+set DISABLE_DATE = To_Date('22.08.2017','dd.mm.yyyy')
+--, AVAILABILITY_TYPE = 1
+, STATUS_ID = 42
+where 1=1 
+--and ORGANIZATION_ID = 96
+and SECONDARY_INVENTORY_NAME in ( '5191')
