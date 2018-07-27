@@ -1,0 +1,10 @@
+SELECT  fu.USER_NAME, PER.FULL_NAME ,PER.EMAIL_ADDRESS 
+  FROM APPS.fnd_user fu 
+ ,APPS.PER_PEOPLE_F PER
+ WHERE
+ --papf.person_id = fu.PERSON_PARTY_ID and
+ fu.EMPLOYEE_ID = PER.PERSON_ID(+) and
+  fu.END_DATE is null	
+ and fu.EMAIL_ADDRESS IS null 
+ and fu.LAST_UPDATE_LOGIN > 1
+ and fu.USER_ID not in (0,1090,1131,1110,2281,1550,5856,2868)
