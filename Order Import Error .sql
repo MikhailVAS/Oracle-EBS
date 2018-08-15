@@ -2,10 +2,9 @@
 
 "Concurrent cannot be  Cancelled" for the parent request, Parent request
   status is 'Paused',  the child requests show as running
-  
-  
+
+
 Line	Oracle E-Business Suite	
-Family	Order Management
 Area	Order Management
 Product	497 - Oracle Order Management
 
@@ -29,3 +28,8 @@ DELETE
        AND orig_sys_document_ref IN (SELECT requisition_header_id
                                        FROM APPS.po_requisition_headers_all
                                       WHERE segment1 IN ('78278')); 
+									  
+/* update the error flag  to NULL so that all the headers  will be picked by Order Import Concurrent request for Processing.*/
+UPDATE PO.PO_REQUISITION_HEADERS_ALL PRH
+   SET TRANSFERRED_TO_OE_FLAG = 'N'
+ WHERE PRH.SEGMENT1 IN ('78278')
