@@ -14,7 +14,7 @@ DATA FIX provided did:
   2. update the error flag and request_id to NULL so that all the headers 
      will be picked by Order Import Concurrent request for Processing. */
 	 
-/*  Delete the duplicate records in headers */
+/*  Delete the duplicate records in headers  iface all */
 DELETE 
   FROM APPS.oe_headers_iface_all
  WHERE     order_source_id = 10
@@ -22,3 +22,10 @@ DELETE
                                        FROM APPS.po_requisition_headers_all
                                       WHERE segment1 IN ('78278'));
 
+/* Delete the duplicate records in lines iface all. */
+DELETE 
+  FROM APPS.oe_lines_iface_all
+ WHERE     order_source_id = 10
+       AND orig_sys_document_ref IN (SELECT requisition_header_id
+                                       FROM APPS.po_requisition_headers_all
+                                      WHERE segment1 IN ('78278')); 
