@@ -17,6 +17,14 @@
                                     '782286')
 ORDER BY TRX_SOURCE_LINE_ID DESC
 
+/* Clear Block s/n */
+UPDATE inv.mtl_serial_numbers
+   SET group_mark_id = NULL,
+       line_mark_id = NULL,
+       lot_line_mark_id = NULL,
+       RESERVATION_ID = NULL
+ WHERE 1 = 1 AND serial_number IN ('862716039744998')
+
 /* Serch Block s/n*/
 SELECT group_mark_id,
        line_mark_id,
