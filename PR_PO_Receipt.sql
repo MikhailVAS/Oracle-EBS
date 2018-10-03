@@ -1,3 +1,16 @@
+/* Кто не закрыл ПО и ПР */
+SELECT DISTINCT PR_NUMBER,
+                USER_NAME,
+                PR_OWNER,
+                PR_NEED_BY_DATE
+  FROM APPS.XXTG_PO_OPEN_V
+ WHERE PR_NEED_BY_DATE <= TO_DATE ('20.06.2018', 'dd.mm.yyyy')
+
+/* Анти PR_PO спам (что не закрыт запрос на закупку) */
+UPDATE PO.PO_HEADERS_ALL POH
+   SET POH.APPROVED_FLAG = 'N'
+ WHERE POH.SEGMENT1 IN ('29462')    
+
 /* PO */
 SELECT *
   FROM PO.po_distributions_all
