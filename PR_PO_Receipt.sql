@@ -1,4 +1,54 @@
 /* Кто не закрыл ПО и ПР */
+SELECT DISTINCT XXTG_PO_OPEN_V.PR_NUMBER,
+                XXTG_PO_OPEN_V.USER_NAME,
+                XXTG_PO_OPEN_V.PR_OWNER,
+                XXTG_PO_OPEN_V.PR_NEED_BY_DATE
+  FROM (SELECT DISTINCT pr.segment1                          PR_NUMBER,
+                        pr.requisition_header_id,
+                        pr.CREATION_DATE                     PR_DATE,
+                        rl.NEED_BY_DATE                      AS PR_NEED_BY_DATE,
+                        rl.ITEM_DESCRIPTION                  AS PR_DESCRIPTION,
+                        hr.FULL_NAME                         AS PR_OWNER,
+                        fu.email_address                     AS EMAIL,
+                        fu.USER_NAME                         USER_NAME,
+                        PH.SEGMENT1                          AS PO_number,
+                        TO_CHAR (PR.CREATION_DATE, 'MON-YY') PR_PERIOD
+          FROM apps.po_headers_all              ph,
+               apps.po_distributions_all        pd,
+               apps.po_req_distributions_all    rd,
+               apps.po_requisition_lines_all    rl,
+               apps.po_requisition_headers_all  pr,
+               apps.po_line_locations_all       pll,
+               apps.po_lines_all                pol,
+               apps.per_people_f                hr,
+               apps.fnd_user                    fu
+         WHERE     ph.po_header_id = pd.po_header_id
+               AND pd.req_distribution_id = rd.distribution_id
+               AND rd.requisition_line_id = rl.requisition_line_id
+               AND rl.requisition_header_id = pr.requisition_header_id
+               AND PLL.PO_LINE_ID = POL.PO_LINE_ID
+               AND PH.PO_HEADER_ID = POL.PO_HEADER_ID
+               AND POL.ITEM_ID = RL.ITEM_ID
+               AND pd.po_line_id = POL.PO_LINE_ID
+               AND fu.employee_id = hr.person_id
+               AND NVL (ph.APPROVED_FLAG, 'N') = 'Y'
+               AND NVL (hr.effective_start_date, SYSDATE - 1) < SYSDATE
+               AND NVL (hr.effective_END_date, SYSDATE + 1) > SYSDATE
+               AND fu.user_id = pr.created_by
+               AND rl.NEED_BY_DATE >= TO_DATE ('01.01.2018', 'dd.mm.yyyy')
+               AND (  pd.QUANTITY_ORDERED
+                    - pd.QUANTITY_DELIVERED
+                    - pd.QUANTITY_CANCELLED) >
+                   0                                                -- open po
+               AND NOT EXISTS
+                       (SELECT 1
+                          FROM apps.PO_ACTION_HISTORY pah
+                         WHERE     pah.action_code = 'CANCEL'
+                               AND pah.object_type_code = 'REQUISITION'
+                               AND pah.object_id = pr.REQUISITION_HEADER_ID))  XXTG_PO_OPEN_V
+ WHERE XXTG_PO_OPEN_V.PR_NEED_BY_DATE <= TO_DATE ('20.06.2018', 'dd.mm.yyyy')
+
+/* Кто не закрыл ПО и ПР */
 SELECT DISTINCT PR_NUMBER,
                 USER_NAME,
                 PR_OWNER,
