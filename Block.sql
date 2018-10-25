@@ -1,3 +1,28 @@
+select 
+   owner       c1, 
+   object_type c3,
+   object_name c2
+from 
+  dba_objects 
+where 
+   status != 'VALID'
+order by
+   owner,
+   object_type;
+   
+
+/* На этом этапе возможно зависание Update, т.к. менеджеры не сразу фиксируют изменения и 
+пока именно этот менеджер (1 из 30) не выполнит, какой нить другой запрос, все может висеть. Поэтому проверяем блокировку;*/
+SELECT
+   s.blocking_session, 
+   s.sid, 
+   s.serial#, 
+   s.seconds_in_wait
+FROM
+   v$session s
+WHERE
+   blocking_session IS NOT NULL
+
 select distinct
        o.object_name,
        sh.username || '(' || sh.sid || ',' || sh.serial# || ')' Holder,
