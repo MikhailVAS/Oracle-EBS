@@ -1,3 +1,76 @@
+/* Проблема согласования PO "Не найден утверждающий для документа"  
+1) Проверка карточки сотрудника 
+2) Проверка иерархии
+3) Проверка Supervisor-ov запросом*/
+SELECT *
+  FROM APPS.wf_users
+ WHERE     1 = 1
+       AND --AND orig_system = 'PER'
+           --AND status = 'ACTIVE'
+           DESCRIPTION IN
+               ('Томуть, Евгения Александровна',
+                'Церкасевич, Татьяна Витальевна',
+                'Бородач, Марина Александровна')
+
+/* Все PO  за 2018 с условиями оплаты */
+SELECT DISTINCT  PHA.SEGMENT1 "PO NUMMBER",
+       PHA.COMMENTS,
+       PHA.CREATION_DATE,
+       PHA.AUTHORIZATION_STATUS,
+       TT.NAME        "TERMS NAME",
+       TT.DESCRIPTION "TERMS DESCRIPTION"
+  FROM APPS.po_headers_all PHA, APPS.AP_TERMS_TL TT
+ WHERE     PHA.TERMS_ID = TT.TERM_ID
+       AND TT.SOURCE_LANG = 'US'
+       --AND segment1 IN ('30203')
+       AND PHA.CREATION_DATE >= to_date('01.01.2018', 'dd.mm.yyyy')
+       ORDER BY PHA.SEGMENT1
+
+/* Open PO for Cancel*/
+DECLARE
+    l_search_status   VARCHAR2 (30) := 'INCOMPLETE';
+    l_change_status   VARCHAR2 (30) := 'APPROVED';
+BEGIN
+    FOR hrec
+        IN (SELECT po_HEADER_ID, segment1, APPROVED_FLAG
+              FROM po_headers_all
+             WHERE     APPROVED_FLAG = 'Y'
+                   AND segment1 = '32040'
+                   AND closed_code = 'CLOSED'--                        and trunc(last_update_date) = to_date('28122018', 'ddmmyyyy')
+                                             )
+    LOOP
+        --        DBMS_OUTPUT.put_line ( 'Change status for order #: ' || hrec.segment1);
+
+        UPDATE po_headers_all h
+           SET h.authorization_status = 'APPROVED'           --l_change_status
+                                                  ,
+               h.APPROVED_FLAG = 'Y',
+               approved_date = SYSDATE,
+               closed_code = 'OPEN'
+         --      , AUTHORIZATION_STATUS = 'INCOMPLETE'
+         WHERE po_HEADER_ID = hrec.po_HEADER_ID;
+
+        UPDATE po_lines_all l
+           SET CLOSED_CODE = 'OPEN',
+               CLM_INFO_FLAG = 'N',
+               clm_option_indicator = 'B'
+         WHERE po_HEADER_ID = hrec.po_HEADER_ID;
+
+
+        UPDATE PO_LINE_LOCATIONS_all
+           SET APPROVED_FLAG = 'Y',
+               CLOSED_CODE = 'OPEN',
+               approved_date = SYSDATE,
+               ENCUMBERED_FLAG = 'Y'
+         WHERE po_HEADER_ID = hrec.po_HEADER_ID;
+
+        DELETE FROM PO_ACTION_HISTORY
+              WHERE OBJECT_ID = hrec.po_HEADER_ID AND ACTION_CODE = 'CLOSE';
+    END LOOP;
+
+    COMMIT;
+END;
+
 /* Кто не закрыл ПО и ПР */
 SELECT DISTINCT XXTG_PO_OPEN_V.PR_NUMBER,
                 XXTG_PO_OPEN_V.USER_NAME,

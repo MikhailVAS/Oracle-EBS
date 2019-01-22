@@ -1,3 +1,5 @@
+
+
 /* View all requests for the current date 
 	 Просмотр всех requests за текущую дату*/
 SELECT fcr.request_id,
