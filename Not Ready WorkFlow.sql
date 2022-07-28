@@ -13,6 +13,96 @@
    WHERE state > 0
 GROUP BY corrid, state
 
+/* All active Expense by date */
+  SELECT *
+    FROM (SELECT WorkflowItemEO.ITEM_TYPE,
+                 WorkflowItemEO.ITEM_KEY,
+                 WorkflowItemEO.ROOT_ACTIVITY,
+                 ActivityEO.DISPLAY_NAME PROCESS_NAME,
+                 WorkflowItemEO.ROOT_ACTIVITY_VERSION,
+                 WorkflowItemEO.OWNER_ROLE,
+                 WorkflowItemEO.PARENT_ITEM_TYPE,
+                 WorkflowItemEO.PARENT_ITEM_KEY,
+                 WorkflowItemEO.PARENT_CONTEXT,
+                 WorkflowItemEO.BEGIN_DATE,
+                 WorkflowItemEO.END_DATE,
+                 WorkflowItemEO.USER_KEY,
+                 WorkflowItemTypeEO.NAME,
+                 WorkflowItemTypeEO.DISPLAY_NAME,
+                 wf_directory.getroledisplayname2 (WorkflowItemEO.OWNER_ROLE)
+                    AS ROLE_NAME,
+                 wf_fwkmon.getitemstatus (WorkflowItemEO.ITEM_TYPE,
+                                          WorkflowItemEO.ITEM_KEY,
+                                          WorkflowItemEO.END_DATE,
+                                          WorkflowItemEO.ROOT_ACTIVITY,
+                                          WorkflowItemEO.ROOT_ACTIVITY_VERSION)
+                    AS STATUS_CODE,
+                 wf_fwkmon.getroleemailaddress (WorkflowItemEO.OWNER_ROLE)
+                    AS ROLE_EMAIL,
+                 DECODE (
+                    (SELECT COUNT (0)
+                       FROM wf_items wi2
+                      WHERE     WorkflowItemEO.item_type = wi2.parent_item_type
+                            AND WorkflowItemEO.item_key = wi2.parent_item_key),
+                    0, 'WfMonNoChildren',
+                    'WfMonChildrenExist')
+                    AS CHILD_SWITCHER
+            FROM WF_ITEMS WorkflowItemEO,
+                 WF_ITEM_TYPES_VL WorkflowItemTypeEO,
+                 WF_ACTIVITIES_VL ActivityEO
+           WHERE     WorkflowItemEO.ITEM_TYPE = WorkflowItemTypeEO.NAME
+                 AND ActivityEO.ITEM_TYPE = WorkflowItemEO.ITEM_TYPE
+                 AND ActivityEO.NAME = WorkflowItemEO.ROOT_ACTIVITY
+                 AND ActivityEO.VERSION = WorkflowItemEO.ROOT_ACTIVITY_VERSION
+                 AND wf_fwkmon.getitemstatus (WorkflowItemEO.ITEM_TYPE,
+                                          WorkflowItemEO.ITEM_KEY,
+                                          WorkflowItemEO.END_DATE,
+                                          WorkflowItemEO.ROOT_ACTIVITY,
+                                          WorkflowItemEO.ROOT_ACTIVITY_VERSION) = 'ACTIVE'
+                                         AND    WorkflowItemTypeEO.NAME ='APEXP' 
+                 AND WorkflowItemTypeEO.DISPLAY_NAME= 'Expenses') QRSLT
+   WHERE ( BEGIN_DATE >= to_date('01.01.2019','dd.mm.yyyy') --USER_KEY LIKE :1 --AND
+    )
+ORDER BY BEGIN_DATE DESC
+
+/* Formatted on 2/13/2019 4:28:12 PM (QP5 v5.227.12220.39754) */
+SELECT NtfEO.NOTIFICATION_ID,
+       NtfEO.RECIPIENT_ROLE,
+       NVL (NtfEO.SENT_DATE, NtfEO.BEGIN_DATE) AS BEGIN_DATE_F,
+       NtfEO.DUE_DATE AS DUE_DATE_F,
+       NtfEO.SUBJECT,
+       DECODE (
+          NtfEO.MORE_INFO_ROLE,
+          NULL, NtfEO.SUBJECT,
+             FND_MESSAGE.GET_STRING ('FND', 'FND_MORE_INFO_REQUESTED')
+          || ' '
+          || NtfEO.SUBJECT)
+          AS SUBJECT,
+       NtfEO.PRIORITY AS PRIORITY_F,
+       NtfEO.STATUS,
+       NtfEO.END_DATE AS END_DATE_F,
+       NtfEO.USER_COMMENT,
+       NtfEO.MORE_INFO_ROLE,
+       NtfEO.FROM_USER,
+       NtfEO.FROM_ROLE,
+       NtfEO.TO_USER,
+       NtfEO.ACCESS_KEY,
+       NtfEO.LANGUAGE,
+       NtfEO.RESPONDER,
+       MsgEO.DISPLAY_NAME,
+       NtfEO.MESSAGE_TYPE,
+       MsgEO.*,
+       NtfEO.*
+  FROM WF_NOTIFICATIONS NtfEO, WF_MESSAGES_TL MsgEO
+ WHERE    -- NtfEO.NOTIFICATION_ID = :1 AND
+        NtfEO.MESSAGE_TYPE = MsgEO.TYPE
+       AND NtfEO.MESSAGE_NAME = MsgEO.NAME
+       AND NVL (NtfEO.LANGUAGE, USERENV ('LANG')) = MsgEO.LANGUAGE
+       AND  NtfEO.STATUS = 'OPEN'
+       AND NtfEO.MESSAGE_TYPE = 'APEXP'
+       AND NtfEO.RECIPIENT_ROLE = 'SYSADMIN'
+      AND NtfEO.SUBJECT NOT like '%BYR%'
+
 /* WorkFlow info by item_key */
 SELECT wias.process_activity
            AS PROCESS_ACTIVITY,

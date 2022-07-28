@@ -1,13 +1,33 @@
+/* Find all info in value set by value set name */
+SELECT ffvs.flex_value_set_id,
+       ffvs.flex_value_set_name,
+       ffvs.description     set_description,
+       ffvs.validation_type,
+       ffv.flex_value_id,
+       ffv.flex_value,
+       ffvt.flex_value_meaning,
+       ffvt.description     value_description
+  FROM fnd_flex_value_sets ffvs, fnd_flex_values ffv, fnd_flex_values_tl ffvt
+ WHERE     ffvs.flex_value_set_id = ffv.flex_value_set_id
+       AND ffv.flex_value_id = ffvt.flex_value_id
+       AND ffvt.language = 'RU'--USERENV ('LANG')
+       AND ffvs.flex_value_set_id =
+           (SELECT DISTINCT FLEX_VALUE_SET_ID
+              FROM applsys.fnd_flex_value_sets fvs
+             WHERE fvs.flex_value_set_name =
+                   NVL (UPPER ('' || :FLEX_FIELD_VALUE_NAME || ''), -- for example XXTG_INT_REQ_REASONS
+                        flex_value_set_name));
+
 /* Query to pull down all flexfield 
      values based upon a specified flex value set name*/
 SELECT fv.*
   FROM applsys.fnd_flex_values fv, applsys.fnd_flex_value_sets fvs
  WHERE     fvs.flex_value_set_id = fv.flex_value_set_id
        AND fvs.flex_value_set_name =
-           NVL (UPPER ('' || :FLEX_FIELD_VALUE_NAME || ''),
+           NVL (UPPER ('' || :FLEX_FIELD_VALUE_NAME || ''), -- for example XXTG_BUDGET
                 flex_value_set_name); 
 				
-/* Formatted on 13/12/2018 15:31:12 (QP5 v5.318) Service Desk  Mihail.Vasiljev */
+/* All info FLEX_FIELD_VALUE */
   SELECT FLEX_VALUE,
          FLEX_VALUE_MEANING,
          DESCRIPTION,
@@ -38,47 +58,6 @@ SELECT fv.*
          CREATED_BY,
          CREATION_DATE,
          LAST_UPDATE_LOGIN,
-         ATTRIBUTE11,
-         ATTRIBUTE12,
-         ATTRIBUTE13,
-         ATTRIBUTE14,
-         ATTRIBUTE15,
-         ATTRIBUTE16,
-         ATTRIBUTE17,
-         ATTRIBUTE18,
-         ATTRIBUTE19,
-         ATTRIBUTE20,
-         ATTRIBUTE21,
-         ATTRIBUTE22,
-         ATTRIBUTE23,
-         ATTRIBUTE24,
-         ATTRIBUTE25,
-         ATTRIBUTE26,
-         ATTRIBUTE27,
-         ATTRIBUTE28,
-         ATTRIBUTE29,
-         ATTRIBUTE30,
-         ATTRIBUTE31,
-         ATTRIBUTE32,
-         ATTRIBUTE33,
-         ATTRIBUTE34,
-         ATTRIBUTE35,
-         ATTRIBUTE36,
-         ATTRIBUTE37,
-         ATTRIBUTE38,
-         ATTRIBUTE39,
-         ATTRIBUTE40,
-         ATTRIBUTE41,
-         ATTRIBUTE42,
-         ATTRIBUTE43,
-         ATTRIBUTE44,
-         ATTRIBUTE45,
-         ATTRIBUTE46,
-         ATTRIBUTE47,
-         ATTRIBUTE48,
-         ATTRIBUTE49,
-         ATTRIBUTE50,
-         ATTRIBUTE_SORT_ORDER,
          ROW_ID
     FROM APPS.FND_FLEX_VALUES_VL
     WHERE 1=1
@@ -92,3 +71,57 @@ SELECT fv.*
 --        -- AND (PARENT_FLEX_VALUE_LOW = 'Командир. Расходы')
 AND FLEX_VALUE = '760_02_2_3_01_01' or FLEX_VALUE = '760_02_2_3_01_01' 
 ORDER BY flex_value
+
+SELECT *
+  FROM FND_FLEX_VALUES_TL T
+ WHERE T.FLEX_VALUE_ID =
+       (SELECT B.FLEX_VALUE_ID
+          FROM FND_FLEX_VALUES B
+         WHERE FLEX_VALUE = 'Furnitures & fittings, Plant and Equipment')
+         
+/* Formatted on 25.03.2021 15:03:51 (QP5 v5.326) Service Desk 472790 Mihail.Vasiljev */
+UPDATE FND_FLEX_VALUES_TL T
+   SET DESCRIPTION = 'Furnitures & fittings,Plant & Equipment',
+       FLEX_VALUE_MEANING = 'Furnitures & fittings,Plant & Equipment'
+ WHERE T.FLEX_VALUE_ID =
+       (SELECT B.FLEX_VALUE_ID
+          FROM FND_FLEX_VALUES B
+         WHERE FLEX_VALUE = 'Furnitures & fittings, Plant and Equipment')     
+         
+SELECT *
+  FROM FND_FLEX_VALUES
+ WHERE FLEX_VALUE = 'Furnitures & fittings, Plant and Equipment'
+ 
+/* Formatted on 25.03.2021 15:04:45 (QP5 v5.326) Service Desk 472790 Mihail.Vasiljev */
+UPDATE APPS.FND_FLEX_VALUES
+   SET FLEX_VALUE = 'Furnitures & fittings,Plant & Equipment'
+ WHERE FLEX_VALUE = 'Furnitures & fittings, Plant and Equipment'
+ 
+ -- Concurrent Program Name with Parameter and Value set
+ SELECT fcpl.user_concurrent_program_name
+      , fcp.concurrent_program_name
+      , par.column_seq_num     
+      , par.end_user_column_name
+      , par.form_left_prompt prompt
+      , par.enabled_flag
+      , par.required_flag
+      , par.display_flag
+      , par.flex_value_set_id
+      , ffvs.flex_value_set_name
+      , flv.meaning default_type
+      , par.DEFAULT_VALUE
+ FROM   fnd_concurrent_programs fcp
+      , fnd_concurrent_programs_tl fcpl
+      , fnd_descr_flex_col_usage_vl par
+      , fnd_flex_value_sets ffvs
+      , fnd_lookup_values flv
+ WHERE  fcp.concurrent_program_id = fcpl.concurrent_program_id
+ AND    fcpl.user_concurrent_program_name = :conc_prg_name
+ AND    fcpl.LANGUAGE = 'US'
+ AND    par.descriptive_flexfield_name = '$SRS$.' || fcp.concurrent_program_name
+ AND    ffvs.flex_value_set_id = par.flex_value_set_id
+ AND    flv.lookup_type(+) = 'FLEX_DEFAULT_TYPE'
+ AND    flv.lookup_code(+) = par.default_type
+ AND    flv.LANGUAGE(+) = USERENV ('LANG')
+
+ ORDER BY par.column_seq_num

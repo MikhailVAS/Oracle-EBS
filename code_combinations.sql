@@ -1,0 +1,4 @@
+SELECT *
+  FROM gl_code_combinations_kfv
+ WHERE CONCATENATED_SEGMENTS =
+       '01.1019.0.0.0.0.0.0.0.0.A_1_136_97.АЙК_84.1006005.716774.0'

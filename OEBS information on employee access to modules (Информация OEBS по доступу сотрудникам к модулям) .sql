@@ -18,6 +18,16 @@
          AND fur.name LIKE UPPER ('%' || :D || '%')
 ORDER BY fur.name
 
+/*Персоны в HRMS*/
+SELECT DISTINCT pf.person_id, pf.full_name
+  FROM --applsys.fnd_user fu,
+       apps.per_people_f pf
+ WHERE --fu.employee_id =
+       pf.person_id IN (4046, 12203)
+--AND SYSDATE BETWEEN NVL (pf.effective_start_date, SYSDATE)
+--AND NVL (pf.effective_end_date, SYSDATE)
+--AND fu.user_id = fnd_profile.VALUE ('USER_ID');
+
 /* Formatted on 25.06.2018 14:21:13 (QP5 v5.318) */
   SELECT DISTINCT fu.user_id,
                   fu.user_name,

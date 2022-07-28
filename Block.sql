@@ -1,27 +1,73 @@
 select 
-   owner       c1, 
-   object_type c3,
-   object_name c2
+owner       c1, 
+object_type c3,
+object_name c2
 from 
-  dba_objects 
+dba_objects 
 where 
-   status != 'VALID'
+status != 'VALID'
 order by
-   owner,
-   object_type;
-   
+owner,
+object_type;
+
 
 /* На этом этапе возможно зависание Update, т.к. менеджеры не сразу фиксируют изменения и 
 пока именно этот менеджер (1 из 30) не выполнит, какой нить другой запрос, все может висеть. Поэтому проверяем блокировку;*/
-SELECT
-   s.blocking_session, 
-   s.sid, 
-   s.serial#, 
-   s.seconds_in_wait
-FROM
-   v$session s
-WHERE
-   blocking_session IS NOT NULL
+select decode (l.BLOCK, 0, 'Waiting', 'Blocking ->') user_status ,s.sid|| ','|| s.serial# ||',@'||l.inst_id sid_serial ,s.program ,s.osuser ,s.machine ,ffs.user_name 
+,ffs.RESPONSIBILITY_NAME ,ffs.USER_FORM_NAME ,decode (l.TYPE,'RT', 'Redo Log Buffer','TD', 'Dictionary' ,'TM', 'DML','TS', 'Temp Segments','TX', 'Transaction' ,'UL', 'User','RW', 
+'Row Wait',l.TYPE) lock_type ,decode (l.lmode,0, 'None',1, 'Null',2, 'Row Share',3, 'Row Excl.' ,4, 'Share',5, 'S/Row Excl.',6, 'Exclusive' ,LTRIM (TO_CHAR (lmode, '990'))) lock_mode 
+,ctime ,decode(l.BLOCK, 0, 'Not Blocking', 1, 'Blocking', 2, 'Global') lock_status ,object_name from gv$lock l ,gv$session s ,gv$locked_object o ,dba_objects d 
+,apps.fnd_form_sessions_v ffs where l.inst_id = s.inst_id and l.sid = s.sid and o.inst_id = s.inst_id and s.sid = o.session_id and d.object_id = o.object_id AND s.sid=ffs.sid(+) and 
+s.inst_id=ffs.inst_id(+) and (l.id1, l.id2, l.type) in (select id1, id2, type from gv$lock where request > 0) and (l.ctime>1);
+
+/* Убиваем блокировку*/   
+alter system kill session '927,28493,@1' immediate;
+
+
+/* Find Locked Table */
+select lo.session_id,lo.oracle_username,lo.os_user_name,
+lo.process,do.object_name,do.owner,
+decode(lo.locked_mode,0, 'None',1, 'Null',2, 'Row Share (SS)',
+3, 'Row Excl (SX)',4, 'Share',5, 'Share Row Excl (SSX)',6, 'Exclusive',
+to_char(lo.locked_mode)) mode_held
+from gv$locked_object lo, dba_objects do
+where lo.object_id = do.object_id
+order by 5
+
+
+SELECT b.session_id AS sid,
+NVL(b.oracle_username, '(oracle)') AS username,
+a.owner AS object_owner,
+a.object_name,
+Decode(b.locked_mode, 0, 'None',
+1, 'Null (NULL)',
+2, 'Row-S (SS)',
+3, 'Row-X (SX)',
+4, 'Share (S)',
+5, 'S/Row-X (SSX)',
+6, 'Exclusive (X)',
+b.locked_mode) locked_mode,
+b.os_user_name
+FROM dba_objects a,
+v$locked_object b
+WHERE a.object_id = b.object_id
+and a.object_name = 'WSH_NEW_DELIVERIES'
+ORDER BY 1, 2, 3, 4;
+
+SELECT o.owner, o.object_name, o.object_type, o.last_ddl_time, o.status, l.session_id,
+         l.oracle_username,
+       Decode(l.locked_mode, 0, 'None',
+                             1, 'Null (NULL)',
+                             2, 'Row-S (SS)',
+                             3, 'Row-X (SX)',
+                             4, 'Share (S)',
+                             5, 'S/Row-X (SSX)',
+                             6, 'Exclusive (X)',
+                             l.locked_mode) locked_mode
+FROM dba_objects o,v$locked_object l
+WHERE o.object_id = l.object_id
+-- o.name = 'YOUR TABLE'
+
 
 select distinct
        o.object_name,

@@ -1,0 +1,57 @@
+
+ /* Change to Serial item */
+UPDATE inv.mtl_system_items_b
+   SET LOT_DIVISIBLE_FLAG = 'Y',
+       LOT_STATUS_ENABLED = 'Y',
+       DEFAULT_LOT_STATUS_ID = 1,
+       SERIAL_STATUS_ENABLED = 'Y',
+       DEFAULT_SERIAL_STATUS_ID = 1,
+       LOT_SPLIT_ENABLED = 'Y',
+       SERIAL_NUMBER_CONTROL_CODE = 5,
+       START_AUTO_SERIAL_NUMBER = 1,
+       AUTO_SERIAL_ALPHA_PREFIX = 'S'
+ WHERE SEGMENT1 IN ('1001024714')
+ 
+SELECT * FROM MTL_SERIAL_NUMBERS WHERE SERIAL_NUMBER = 'VIRT0003323920'
+
+select RPAD ('VIRT',14 - LENGTH(APPS.XXTG_SERIAL_NUM_VIRT_S.nextval),'0' )||APPS.XXTG_SERIAL_NUM_VIRT_S.currval 
+from dual
+							 
+/* Formatted on 2/25/2020 4:59:46 PM (QP5 v5.326) Service Desk  Mihail.Vasiljev */
+SELECT mwb.organization_id,
+       mwb.organization_code,
+       mwb.subinventory_code,
+       mwb.locator_id,
+       mwb.locator,
+       mwb.inventory_item_id,
+       mwb.item,
+       mwb.item_description,
+       mwb.uom,
+       mwb.on_hand,
+       cic.item_cost
+  FROM MTL_ONHAND_TOTAL_MWB_V  mwb,
+       cst_item_cost_type_v    cic,
+       mtl_item_locations_kfv  il
+ WHERE     1 = 1
+       AND cic.inventory_item_id = mwb.inventory_item_id
+       AND mwb.inventory_item_id = (SELECT DISTINCT INVENTORY_ITEM_ID
+                                      FROM inv.mtl_system_items_b a
+                                     WHERE SEGMENT1 = '1001024714')
+       AND cic.organization_id = mwb.organization_id
+       AND il.inventory_location_id = mwb.locator_id
+       AND mwb.SUBINVENTORY_CODE = '6859';
+							 
+Insert into MTL_SERIAL_NUMBERS
+   (INVENTORY_ITEM_ID, SERIAL_NUMBER, LAST_UPDATE_DATE, LAST_UPDATED_BY, CREATION_DATE,
+    CREATED_BY, LAST_UPDATE_LOGIN, REQUEST_ID, INITIALIZATION_DATE, COMPLETION_DATE,
+    CURRENT_STATUS, LOT_NUMBER, PARENT_ITEM_ID, ORIGINAL_UNIT_VENDOR_ID, LAST_TXN_SOURCE_TYPE_ID,
+    LAST_TRANSACTION_ID, LAST_RECEIPT_ISSUE_TYPE, CURRENT_SUBINVENTORY_CODE, CURRENT_LOCATOR_ID, CURRENT_ORGANIZATION_ID,
+    GEN_OBJECT_ID, STATUS_ID, COST_GROUP_ID, PREVIOUS_STATUS, ORGANIZATION_TYPE,
+    OWNING_ORGANIZATION_ID, OWNING_TP_TYPE, PLANNING_ORGANIZATION_ID, PLANNING_TP_TYPE)
+Values
+   (29959 /*INVENTORY_ITEM_ID*/, 'VIRT0003323907' /*SERIAL_NUMBER*/, TO_DATE('10/02/2020 23:45:15', 'DD/MM/YYYY HH24:MI:SS') /*LAST_UPDATE_DATE*/, 0 /*LAST_UPDATED_BY*/, TO_DATE('10/02/2020 23:45:01', 'DD/MM/YYYY HH24:MI:SS') /*CREATION_DATE*/,
+    0 /*CREATED_BY*/, 22102896 /*LAST_UPDATE_LOGIN*/, -1 /*REQUEST_ID*/, TO_DATE('31/12/2019 23:59:59', 'DD/MM/YYYY HH24:MI:SS') /*INITIALIZATION_DATE*/, TO_DATE('31/12/2019 23:59:59', 'DD/MM/YYYY HH24:MI:SS') /*COMPLETION_DATE*/,
+    3 /*CURRENT_STATUS*/, '23/03/2011VPC_Systems_s.037034' /*LOT_NUMBER*/, 0 /*PARENT_ITEM_ID*/, 0 /*ORIGINAL_UNIT_VENDOR_ID*/, 13 /*LAST_TXN_SOURCE_TYPE_ID*/,
+    39949717 /*LAST_TRANSACTION_ID*/, 2 /*LAST_RECEIPT_ISSUE_TYPE*/, '6859' /*CURRENT_SUBINVENTORY_CODE*/, 130 /*CURRENT_LOCATOR_ID*/, 1369 /*CURRENT_ORGANIZATION_ID*/,
+    MTL_GEN_OBJECT_ID_S.nextval /*GEN_OBJECT_ID*/, 1 /*STATUS_ID*/, 9010 /*COST_GROUP_ID*/, 1 /*PREVIOUS_STATUS*/, 2 /*ORGANIZATION_TYPE*/,
+    1369 /*OWNING_ORGANIZATION_ID*/, 2 /*OWNING_TP_TYPE*/, 1369 /*PLANNING_ORGANIZATION_ID*/, 2 /*PLANNING_TP_TYPE*/);
