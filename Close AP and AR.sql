@@ -15,14 +15,13 @@ SELECT *
        AND application_id = 222;
 
 /* Close AP and AR period */ 
-/* Formatted on 18.10.2018 12:03:21 (QP5 v5.318) Service Desk  248067 Mihail.Vasiljev */
 UPDATE APPS.gl_period_statuses
    SET closing_status = 'C'
  WHERE     period_name IN ('SEP-18')
        AND application_id IN (200, 222)
        AND set_of_books_id IN (2022, 2047)
 	   
-/* Какие Документы*/
+/* Find document*/
 SELECT DESCRIPTION
   FROM xla.xla_ae_headers xah
  WHERE xah.event_id IN (5996513, 5996515, 5980710)

@@ -1,4 +1,4 @@
-/* Поиск всех схожих ручных журналов за февраль и получение JE_HEADER_ID для проверки в double_global */
+/* Find all similar manual journals for February and get JE_HEADER_ID to check in double_global */
   SELECT GJH.CREATED_BY,
          GJH.JE_HEADER_ID,
          fu.user_name,
@@ -64,29 +64,9 @@
 -- WHERE fu.user_name LIKE UPPER ('%' || :ORACLE_USER_NAME || '%')) /* BSTALICE*/
 ORDER BY 11, 7, 9
 
-/* Find all account by  transaction in double_global*/
-  SELECT                                                            --distinct
-         ENTERED_AMOUNT,
-         D_ACCOUNTING_DATE,
-         C_ACCOUNTING_DATE,
-         D_AN_DESC_1,
-         C_AN_DESC_3,
-         ENTERED_AMOUNT,
-         g1.C_DOC_NUM,
-         g1.d_DOC_NUM,
-         g1.*
-    FROM xxtg.xxtg_gl001_double_global g1
-   WHERE  (D_AE_HEADER_ID in (2182717,2182754) or c_AE_HEADER_ID in (2182717,2182754))
- and D_ACCOUNTING_DATE between to_date ('21.02.2019','.dd.mm.yyyy') and to_date ('28.02.2019','.dd.mm.yyyy')
-ORDER BY                                                  
-         g1.D_ACCOUNTING_DATE,
-         g1.ENTERED_AMOUNT,
-         g1.DOUBLE_GLOBAL_ID,
-         g1.C_DOC_NUM
-
 
 /* Formatted on 11.03.2019 11:45:52 (QP5 v5.326) Service Desk 280468 Mihail.Vasiljev */
-/* Обновление статуса обсчёта , для перерасчёта из-за дублирования */
+/* Updating the calculation status, for recalculation due to duplication */
 UPDATE APPS.GL_JE_HEADERS
    SET ATTRIBUTE10 = NULL
  WHERE JE_HEADER_ID in (2182717,2182754)

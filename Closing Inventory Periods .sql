@@ -14,7 +14,7 @@ SELECT *
        AND PERIOD_NAME = 'AUG-20'
 
 
-/* Проверка на не отпощеные записи*/
+/* Checking for unposted entries*/
 SELECT TRX.TRANSACTION_DATE,
        TRX.TRANSACTION_QUANTITY,
        EN.transaction_number,

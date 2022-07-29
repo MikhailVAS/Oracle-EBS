@@ -9,8 +9,3 @@ UPDATE inv.mtl_material_transactions
    SET TRANSACTION_TYPE_ID = 763
  WHERE transaction_set_id IN ('33660200')
  
- 	
-/* Formatted on 12.09.2018 14:50:47 (QP5 v5.318) */
-UPDATE inv.mtl_transaction_accounts
-   SET TRANSACTION_TYPE_ID = 763
- WHERE transaction_set_id IN ('33660200')

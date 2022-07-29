@@ -11,8 +11,8 @@ owner,
 object_type;
 
 
-/* На этом этапе возможно зависание Update, т.к. менеджеры не сразу фиксируют изменения и 
-пока именно этот менеджер (1 из 30) не выполнит, какой нить другой запрос, все может висеть. Поэтому проверяем блокировку;*/
+/* At this stage, Update may hang, because managers do not immediately commit changes and
+until this particular manager (1 out of 30) executes which thread another request, everything can hang. Therefore, we check the lock;*/
 select decode (l.BLOCK, 0, 'Waiting', 'Blocking ->') user_status ,s.sid|| ','|| s.serial# ||',@'||l.inst_id sid_serial ,s.program ,s.osuser ,s.machine ,ffs.user_name 
 ,ffs.RESPONSIBILITY_NAME ,ffs.USER_FORM_NAME ,decode (l.TYPE,'RT', 'Redo Log Buffer','TD', 'Dictionary' ,'TM', 'DML','TS', 'Temp Segments','TX', 'Transaction' ,'UL', 'User','RW', 
 'Row Wait',l.TYPE) lock_type ,decode (l.lmode,0, 'None',1, 'Null',2, 'Row Share',3, 'Row Excl.' ,4, 'Share',5, 'S/Row Excl.',6, 'Exclusive' ,LTRIM (TO_CHAR (lmode, '990'))) lock_mode 
@@ -20,7 +20,7 @@ select decode (l.BLOCK, 0, 'Waiting', 'Blocking ->') user_status ,s.sid|| ','|| 
 ,apps.fnd_form_sessions_v ffs where l.inst_id = s.inst_id and l.sid = s.sid and o.inst_id = s.inst_id and s.sid = o.session_id and d.object_id = o.object_id AND s.sid=ffs.sid(+) and 
 s.inst_id=ffs.inst_id(+) and (l.id1, l.id2, l.type) in (select id1, id2, type from gv$lock where request > 0) and (l.ctime>1);
 
-/* Убиваем блокировку*/   
+/* We kill blocking*/   
 alter system kill session '927,28493,@1' immediate;
 
 
@@ -96,8 +96,8 @@ where lh.id1 = o.object_id
      and lw.type = 'TM'
      
      
-/* он показывает сессии которые блокируют и те что заблокированы больше 900 секунд ,
-l.ctime - меняешь на нужное тебе и смотришь */
+/* it shows sessions that block and those that are blocked for more than 900 seconds,
+l.ctime - change to what you need and look */
   SELECT DECODE (l.BLOCK, 0, 'Waiting', 'Blocking ->') user_status,
          s.sid || ',' || s.serial# || ',@' || l.inst_id sid_serial,
          s.program,
