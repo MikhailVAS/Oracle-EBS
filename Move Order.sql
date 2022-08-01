@@ -91,3 +91,82 @@ SELECT wnd.delivery_id,
        AND wdd.source_line_id = oola.line_id
        AND wdd.source_header_id = oola.header_id
 --       AND mtrl.HEADER_ID  = '2190707' -- Move Order 
+
+/* query for linking move orders with the pending table: */
+SELECT mmtt.transaction_temp_id,
+       tol.organization_id,
+       toh.request_number,
+       toh.header_id,
+       tol.line_number,
+       tol.line_id,
+       tol.inventory_item_id,
+       toh.description,
+       toh.move_order_type,
+       tol.line_status,
+       tol.quantity,
+       tol.quantity_delivered,
+       tol.quantity_detailed
+  FROM mtl_txn_request_headers         toh,
+       mtl_txn_request_lines           tol,
+       mtl_material_transactions_temp  mmtt
+ WHERE     toh.header_id = tol.header_id
+       AND toh.organization_id = tol.organization_id
+       AND tol.line_id = mmtt.move_order_line_id;
+                    
+/* query linking MTL_MATERIAL_TRANSACTIONS to the move order */
+SELECT mmt.transaction_id,
+       tol.organization_id,
+       toh.request_number,
+       toh.header_id,
+       tol.line_number,
+       tol.line_id,
+       tol.inventory_item_id,
+       toh.description,
+       toh.move_order_type,
+       tol.line_status,
+       tol.quantity,
+       tol.quantity_delivered,
+       tol.quantity_detailed
+  FROM mtl_txn_request_headers    toh,
+       mtl_txn_request_lines      tol,
+       mtl_material_transactions  mmt
+ WHERE     toh.header_id = tol.header_id
+       AND toh.organization_id = tol.organization_id
+       AND tol.line_id = mmt.move_order_line_id
+       AND toh.request_number = '280765'
+
+/* Find all move order lines with transaction quantity 0*/
+SELECT MTRL.QUANTITY,
+       (SELECT La.ordered_quantity
+          FROM ont.OE_ORDER_LINES_all La, ont.oe_order_headers_all h
+         WHERE     La.header_id = H.HEADER_ID
+               AND La.header_id IN
+                       (SELECT ha.header_id
+                          FROM ont.oe_order_headers_all  ha,
+                               ont.OE_ORDER_LINES_all    LaL
+                         WHERE     H.HEADER_ID = LaL.header_id
+                               AND ha.order_number IN (280765)) -- Move Order 280765 Internal.ORDER ENTRY
+               AND MTRL.TXN_SOURCE_LINE_ID = La.LINE_ID) AS "BackUp_By_SalOrde_Qt"
+  FROM MTL_TXN_REQUEST_LINES MTRL
+ WHERE     LINE_ID IN (SELECT MOVE_ORDER_LINE_ID
+                         FROM WSH_DELIVERY_DETAILS
+                        WHERE SOURCE_HEADER_NUMBER = '280765') -- Move Order 280765 Internal.ORDER ENTRY
+                        AND MTRL.QUANTITY = '0'
+
+/* Update to correct quantity all move order lines with transaction quantity 0 */
+UPDATE MTL_TXN_REQUEST_LINES MTRL
+   SET QUANTITY =
+           (SELECT La.ordered_quantity
+              FROM ont.OE_ORDER_LINES_all La, ont.oe_order_headers_all h
+             WHERE     La.header_id = H.HEADER_ID
+                   AND La.header_id IN
+                           (SELECT ha.header_id
+                              FROM ont.oe_order_headers_all  ha,
+                                   ont.OE_ORDER_LINES_all    LaL
+                             WHERE     H.HEADER_ID = LaL.header_id
+                                   AND ha.order_number IN (280765)) -- Move Order 280765 Internal.ORDER ENTRY
+                   AND MTRL.TXN_SOURCE_LINE_ID = La.LINE_ID)
+ WHERE     LINE_ID IN (SELECT MOVE_ORDER_LINE_ID
+                         FROM WSH_DELIVERY_DETAILS
+                        WHERE SOURCE_HEADER_NUMBER = '280765') -- Move Order 280765 Internal.ORDER ENTRY
+       AND MTRL.QUANTITY = '0'
