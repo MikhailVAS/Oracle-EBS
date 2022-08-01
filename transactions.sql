@@ -42,7 +42,7 @@ UPDATE inv.mtl_transaction_accounts mta
                            WHERE transaction_set_id IN (47342043))
                              
 
-/* Получение дубликатов транзакций */
+/* Find dublicate in transactions */
   SELECT INVENTORY_ITEM_ID, MAX (TRANSACTION_ID), MIN (TRANSACTION_ID)
     FROM inv.mtl_material_transactions
    WHERE transaction_set_id IN (36947655) AND ORGANIZATION_ID = 84
@@ -57,7 +57,12 @@ SELECT TRANSACTION_TYPE_ID, TRANSACTION_TYPE_NAME, DESCRIPTION
   WHERE MTT.TRANSACTION_TYPE_ID=MMT.TRANSACTION_TYPE_ID
   )TRANSACTION_TYPE
 
-/* Изменение типа в транзакции */
+  /* All transaction type */
+SELECT TRANSACTION_TYPE_ID, TRANSACTION_TYPE_NAME, DESCRIPTION
+  FROM inv.MTL_TRANSACTION_TYPES
+  WHERE TRANSACTION_TYPE_NAME LIKE '%Dealer SCRATCH %' 
+
+/* Change type in transactions */
 UPDATE inv.mtl_material_transactions
    SET Transaction_TYPE_ID = 561                   --  XXTG Flagship Equip W/O
  WHERE transaction_set_id IN (32684144, 32692853)
