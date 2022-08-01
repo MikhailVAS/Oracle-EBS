@@ -155,7 +155,7 @@ SELECT MTRL.QUANTITY,
 
 /* Update to correct quantity all move order lines with transaction quantity 0 */
 UPDATE MTL_TXN_REQUEST_LINES MTRL
-   SET QUANTITY =
+   SET QUANTITY = 
            (SELECT La.ordered_quantity
               FROM ont.OE_ORDER_LINES_all La, ont.oe_order_headers_all h
              WHERE     La.header_id = H.HEADER_ID
@@ -166,6 +166,28 @@ UPDATE MTL_TXN_REQUEST_LINES MTRL
                              WHERE     H.HEADER_ID = LaL.header_id
                                    AND ha.order_number IN (280765)) -- Move Order 280765 Internal.ORDER ENTRY
                    AND MTRL.TXN_SOURCE_LINE_ID = La.LINE_ID)
+--        ,PRIMARY_QUANTITY = 
+--        (SELECT La.ordered_quantity
+--              FROM ont.OE_ORDER_LINES_all La, ont.oe_order_headers_all h
+--             WHERE     La.header_id = H.HEADER_ID
+--                   AND La.header_id IN
+--                           (SELECT ha.header_id
+--                              FROM ont.oe_order_headers_all  ha,
+--                                   ont.OE_ORDER_LINES_all    LaL
+--                             WHERE     H.HEADER_ID = LaL.header_id
+--                                   AND ha.order_number IN (280765))
+--                  AND MTRL.TXN_SOURCE_LINE_ID = La.LINE_ID) 
+ ,QUANTITY_DETAILED =
+        (SELECT La.ordered_quantity
+              FROM ont.OE_ORDER_LINES_all La, ont.oe_order_headers_all h
+             WHERE     La.header_id = H.HEADER_ID
+                   AND La.header_id IN
+                           (SELECT ha.header_id
+                              FROM ont.oe_order_headers_all  ha,
+                                   ont.OE_ORDER_LINES_all    LaL
+                             WHERE     H.HEADER_ID = LaL.header_id
+                                   AND ha.order_number IN (280765))
+                  AND MTRL.TXN_SOURCE_LINE_ID = La.LINE_ID)
  WHERE     LINE_ID IN (SELECT MOVE_ORDER_LINE_ID
                          FROM WSH_DELIVERY_DETAILS
                         WHERE SOURCE_HEADER_NUMBER = '280765') -- Move Order 280765 Internal.ORDER ENTRY
