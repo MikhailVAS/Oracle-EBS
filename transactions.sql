@@ -40,6 +40,24 @@ UPDATE inv.mtl_transaction_accounts mta
  WHERE transaction_id IN (SELECT TRANSACTION_ID
                             FROM mtl_material_transactions mmt
                            WHERE transaction_set_id IN (47342043))
+
+/*====================== Deleet one serial in inv transaction ====================*/
+/* Formatted on (QP5 v5.326) Service Desk 604949 Mihail.Vasiljev */
+UPDATE INV.MTL_MATERIAL_TRANSACTIONS
+   SET TRANSACTION_QUANTITY = -8, PRIMARY_QUANTITY = 8
+ WHERE TRANSACTION_ID = '47552153'
+
+/* Formatted on (QP5 v5.326) Service Desk 604949 Mihail.Vasiljev */
+UPDATE MTL_TRANSACTION_LOT_NUMBERS
+   SET TRANSACTION_QUANTITY = -8, PRIMARY_QUANTITY = 8
+ WHERE (TRANSACTION_ID = '47552153')
+ 
+/* Formatted on (QP5 v5.326) Service Desk 604949 Mihail.Vasiljev */
+DELETE FROM MTL_UNIT_TRANSACTIONS
+      WHERE     TRANSACTION_ID = '47552154'
+            AND SERIAL_NUMBER = '893412701137609666'
+
+/*==================================================================================*/ 
                              
 
 /* Find dublicate in transactions */
