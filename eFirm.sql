@@ -415,3 +415,68 @@ where 1=1
   and p.party_id = ca.party_id
   and p.TAX_REFERENCE = '192817982';
 
+
+  /* All suppliers and cotrcat  with terms */
+  SELECT DISTINCT
+--         efs.VENDOR_ID,
+         aps.VENDOR_ID,
+         aps.VENDOR_NAME
+             AS "Наименование",
+         aps.VENDOR_NAME_ALT
+             AS "Альтернативное наименование",
+         aps.VAT_REGISTRATION_NUM
+             AS "УНП",
+         NVL2 (TO_CHAR (aps.END_DATE_ACTIVE), 'No', 'Active')
+             AS "Статус",
+         aps.VENDOR_TYPE_LOOKUP_CODE
+             AS "Тип Фирмы",
+         MSI.SECONDARY_INVENTORY_NAME
+             AS "Код дилера",
+         --           MSI.ORGANIZATION_ID,
+         CASE MSI.ORGANIZATION_ID
+             WHEN 82 THEN 'BMW: Организаци ведения ТМЦ'
+             WHEN 83 THEN 'BBW: Склад Бест'
+             WHEN 84 THEN 'BDW: Дилеры'
+             WHEN 85 THEN 'BHW: Головной офис Бест'
+             WHEN 86 THEN 'BSW: Подрядчики'
+             ELSE 'Слад не привязан'
+         END
+             AS "Наименованеи_склада",
+         INVOICE_TYPE_DETAIL
+             AS COntract_NO,
+         --         (SELECT FULL_NAME
+         --            FROM per_all_people_f PAPF
+         --           WHERE     PAPF.PERSON_ID = (SELECT fu.EMPLOYEE_ID
+         --                                         FROM fnd_user fu
+         --                                        WHERE fu.user_id = EIT.CREATED_BY)
+         --                 AND ROWNUM = 1)
+         --             AS "Contract CREATED_BY",
+         --         efs.CREATION_DATE
+         --             AS "Contract CREATION_DATE",
+         EIT.PROCESS,
+         END_DATE,
+         TT.NAME
+             "TERMS NAME",
+         TT.DESCRIPTION
+             "TERMS DESCRIPTION"
+    --         aps.CREATION_DATE
+    --             AS "eFirm CREATION_DATE",
+    --         (SELECT FULL_NAME
+    --            FROM per_all_people_f PAPF
+    --           WHERE     PAPF.PERSON_ID = (SELECT fu.EMPLOYEE_ID
+    --                                         FROM fnd_user fu
+    --                                        WHERE fu.user_id = efs.CREATED_BY)
+    --                 AND ROWNUM = 1)
+    --             AS "eFirm CREATED_BY"
+    FROM xxtg_ef_suppliers efs
+         LEFT JOIN ap.ap_suppliers aps ON aps.VENDOR_ID = efs.VENDOR_ID
+         LEFT JOIN APPS.ar_customers ars ON ars.CUSTOMER_NAME = aps.VENDOR_NAME
+         LEFT JOIN inv.MTL_SECONDARY_INVENTORIES MSI
+             ON ars.CUSTOMER_ID = MSI.ATTRIBUTE5
+         LEFT JOIN XXTG.XXTG_EF_INVOICE_TYPE EIT
+             ON aps.VENDOR_ID = EIT.VENDOR_ID
+         LEFT JOIN APPS.AP_TERMS_TL TT
+             ON EIT.PAYMENT_TERM = TT.TERM_ID AND TT.SOURCE_LANG = 'US'
+   WHERE 1 = 1
+ORDER BY aps.VAT_REGISTRATION_NUM
+

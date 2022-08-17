@@ -885,6 +885,23 @@ SELECT SERIAL_NUMBER,
                                   FROM inv.mtl_system_items_b a
                                  WHERE a.SEGMENT1 = '1051000126')
 --========================================================================
+DROP TABLE XXTG.XXTG_SERIAL_NUMBERS 
+
+CREATE TABLE XXTG.XXTG_SERIAL_NUMBERS
+(
+  INVENTORY_ITEM_ID          VARCHAR2 (30),
+  SERIAL_NUMBER              VARCHAR2(30 BYTE)  NOT NULL
+)
+
+UPDATE XXTG.XXTG_SERIAL_NUMBERS
+   SET INVENTORY_ITEM_ID = REPLACE (INVENTORY_ITEM_ID, '?'),
+       SERIAL_NUMBER = REPLACE (SERIAL_NUMBER, '?')
+
+SELECT MSN.SERIAL_NUMBER,
+       MSN.attribute9
+           "DID"
+            FROM XXTG.XXTG_SERIAL_NUMBERS XSN
+LEFT JOIN inv.mtl_serial_numbers MSN ON MSN.serial_number = XSN.serial_number
 
 --========================= Excele =================================
 = "UPDATE MTL_UNIT_TRANSACTIONS
