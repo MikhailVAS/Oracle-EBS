@@ -73,18 +73,18 @@ UPDATE INV.MTL_MATERIAL_TRANSACTIONS
   AND SOURCE_CODE = 'ORDER ENTRY'
  
  
- /* Formatted on 30.10.2020 12:04:34 (QP5 v5.326) Service Desk 432727 Mihail.Vasiljev */
+ /* Formatted on  (QP5 v5.326) Service Desk 432727 Mihail.Vasiljev */
 DELETE FROM MTL_TXN_REQUEST_LINES MTRL
       WHERE line_id IN
                 (SELECT wsh.move_order_line_id
                    FROM wsh_delivery_details_ob_grp_v wsh
                   WHERE source_code = 'OE' AND wsh.source_header_id = 388442)
                           
-/* Formatted on 30.10.2020 12:04:29 (QP5 v5.326) Service Desk 432727 Mihail.Vasiljev */
+/* Formatted on (QP5 v5.326) Service Desk 432727 Mihail.Vasiljev */
 DELETE FROM MTL_TXN_REQUEST_HEADERS MTRH
       WHERE HEADER_ID = 2339193
       
-/* Formatted on 30.10.2020 12:21:28 (QP5 v5.326) Service Desk  Mihail.Vasiljev */
+/* Formatted on (QP5 v5.326) Service Desk  Mihail.Vasiljev */
 UPDATE wsh.wsh_delivery_details
    SET RELEASED_STATUS = 'B', INV_INTERFACED_FLAG = 'N', MOVE_ORDER_LINE_ID = null
  WHERE delivery_detail_id IN (646874,646873)

@@ -15,6 +15,10 @@ UPDATE xla_events
                                                           47015310,
                                                           47015323)));
 
+/* Formatted on 05.09.2022 14:58:17 (QP5 v5.326) Service Desk  614127 Mihail.Vasiljev */
+DELETE FROM mtl_cst_layer_act_cost_details
+      WHERE TRANSACTION_ID = '48066316'
+
 /* =========================   Исправление  Кол-во ============================*/     
 UPDATE bom.cst_inv_layers
    SET layer_quantity = CREATION_QUANTITY
@@ -291,6 +295,63 @@ SELECT   transaction_id txnid, transfer_transaction_id txfrtxnid
     FROM mtl_material_transactions mmt
    WHERE transaction_id IN (&Trx_Id)   -- Error transaction_id
 ORDER BY transaction_id DESC
+
+/* =====================================================================================================================*/ 
+
+
+/*Cause
+The cause of the issue is invalid / incorrect data in MMT*/
+
+1. SELECT * FROM mtl_tranaction_accounts
+WHERE transaction_id = 187288763;
+
+2. SELECT * FROM mtl_cst_layer_act_cost_details
+WHERE inventory_item_id =
+(SELECT * FROM mtl_material_transactions
+WHERE transaction_id = 187288763)
+AND organization_id = 333;
+
+
+-- Solution
+-- To implement the solution, please execute the following steps::
+-- 1. Ensure that you have taken a backup of your system before applying the recommended solution.
+
+-- 2. Run the following scripts in a TEST environment first:
+
+SELECT * FROM mtl_tranaction_accounts
+WHERE transaction_id = xxx;
+
+SELECT * FROM mtl_cst_layer_act_cost_details
+WHERE inventory_item_id =
+(SELECT * FROM mtl_material_transactions
+WHERE transaction_id = &txn_id)
+AND organization_id = &org_id;
+
+/*If a row is returned for both scripts then the data should not be with costed flag N, or E,
+because there exists data in MTA and MCLACD? We can set the costed_flag = NULL as the record is
+already costed.The system is trying to insert a duplicate and this is the reason why we get the
+error CSTPLENG.create_layers (100): ORA-00001: unique constraint (INV.MTL_CST_LAYER_ACT_CST_DTLS_U1)
+As a result, the line will not be seen by the cost Manager as to be costed and we will not get
+this error...
+
+Run the following update script:*/
+
+update mtl_material_transactions
+set costed_flag = NULL,
+transaction_group_id = NULL,
+error_code = NULL,
+error_explanation = NULL
+where costed_flag ='E'
+and TRANSACTION_ID = &txn_id
+and organization_id= &org_id;
+
+
+--3. Once the scripts complete, confirm that the data is corrected.
+
+Select *
+from mtl_material_transactions
+where transaction_id = &txn_id
+ /* =====================================================================================================================*/ 
 
 
 

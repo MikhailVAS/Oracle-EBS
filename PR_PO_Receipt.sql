@@ -13,13 +13,13 @@ UPDATE inv.mtl_system_items_b
 
  UPDATE PO.po_headers_all
    SET CREATION_DATE =
-           TO_DATE ('30.04.2022 12:13:56', 'dd.mm.yyyy hh24:mi:ss')
+           TO_DATE ('31.08.2022 12:13:56', 'dd.mm.yyyy hh24:mi:ss')
  WHERE segment1 IN ('47585')
 
 /* 	Update need by date in  PR*/	
 UPDATE Po_Requisition_Lines_All
    SET NEED_BY_DATE =
-           TO_DATE ('30.04.2022 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
+           TO_DATE ('31.08.2022 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
  WHERE REQUISITION_LINE_ID IN
            (SELECT REQUISITION_LINE_ID
               FROM Po_Requisition_Lines_All l, Po_Requisition_Headers_All h
@@ -31,7 +31,7 @@ UPDATE Po_Requisition_Lines_All
 /* 	Update need by date in  PO*/	   
 UPDATE APPS.PO_LINE_LOCATIONS_all
    SET NEED_BY_DATE =
-           TO_DATE ('30.04.2022 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
+           TO_DATE ('31.08.2022 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
  WHERE po_HEADER_ID IN (SELECT po_header_id
                           FROM PO.po_headers_all
                          WHERE segment1 IN ('43220')); -- Number PO
@@ -39,7 +39,7 @@ UPDATE APPS.PO_LINE_LOCATIONS_all
 /* Update date in Receipt*/
 UPDATE  PO.RCV_TRANSACTIONS
    SET TRANSACTION_DATE =
-           TO_DATE ('30.04.2022 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
+           TO_DATE ('31.08.2022 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
  WHERE PO_HEADER_ID in (SELECT po_header_id
                              FROM PO.po_headers_all
                             WHERE segment1 IN ('54772')); 
