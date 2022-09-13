@@ -1,3 +1,20 @@
+begin
+
+inv_item_events_pvt.invoke_icx_apis( p_entity_type       => 'ITEM',
+                                     p_dml_type          => 'UPDATE',
+                                     p_inventory_item_id => (SELECT DISTINCT INVENTORY_ITEM_ID
+                                   FROM inv.mtl_system_items_b a
+                                  WHERE SEGMENT1 = '1006635230'),
+                                     p_item_description  => 'Наклейка самоклейка винил Светлогорск, ул. Батова 1 ТЦ Пассаж  1400*500',
+                                     p_organization_id   => 82,
+                                     p_master_org_flag   => 'Y',
+                                     p_commit            => TRUE
+                                  );
+
+end;
+
+
+
 -- ALTER SESSION SET NLS_LANGUAGE='Russian'
 
 /* Здравствуйте. Я не могу создать PR, т.к. не соответствуют item и наименования ТМЦ в iProcurment.    
@@ -449,9 +466,9 @@ SELECT DISTINCT
                      WEIGHT_APP_USER,
                  XXTG_CREATING_ITEM_PKG.GET_NAME_IO (VAL.APPROVER_ID)
                      APPROVER_ID_USER_NAME,
-                 XXTG_CREATING_ITEM_PKG.GET_NOTIFICATION_MESS (VAL.HEADER_ID,
-                                                               VAL.APPROVER_ID)
-                     AS MESSAGE,
+--                 XXTG_CREATING_ITEM_PKG.GET_NOTIFICATION_MESS (VAL.HEADER_ID,
+--                                                               VAL.APPROVER_ID)
+--                     AS MESSAGE,
                  NVL (VAL.UOM,
                       (SELECT UM.UNIT_OF_MEASURE_TL
                          FROM MTL_UNITS_OF_MEASURE UM
@@ -579,4 +596,5 @@ SELECT DISTINCT
    WHERE     QRSLT.CREATION_DATE >=
              TO_DATE ('01.01.2021 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
          AND ((ICHDR.HEADER_ID = QRSLT.HEADER_ID))
+         AND ICHDR.FILE_ID = 948689 -- ID Загрузки
 ORDER BY QRSLT.CREATION_DATE

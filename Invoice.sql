@@ -54,7 +54,34 @@ UPDATE APPS.ZX_LINES ZL
        ZL.UNROUNDED_TAX_AMT = 0,
        ZL.CANCEL_FLAG = 'Y'
  WHERE ZL.TAX_LINE_ID = 12390313;
+
  
+/* Find Billing Error in OEBS by AUG-22*/
+SELECT *
+  --ORIG_INVOICE_NUMBER
+  FROM XXTG_EHSCHF_ISSUANCE
+ WHERE     -- INVOICE_NUM = '1420842891'
+           DOC_TYPE = 'OUTCOMING'
+       AND DOC_STATUS = 'ERROR'
+       AND DATE_TRANSACTION BETWEEN TO_DATE ('01.08.2022', 'dd.mm.yyyy')
+                                AND TO_DATE ('31.08.2022', 'dd.mm.yyyy')
+       AND ERROR_MESSAGES LIKE
+               '%Технические детали: ORA-29532: вызов Java прерван неустановленным исключением Java: oracle.xml.parser.v2.XMLParseException: Missing Attribute%'
+ 
+
+ /* Find Billing Error by AUG-22 */
+SELECT DISTINCT *
+  FROM apps.MONTHLY_BILLS_DETAILS bd
+ WHERE     bd.MONTH = 202208                                         -- AUG-22
+       AND INVOICE_NUMBER IN
+               (SELECT ORIG_INVOICE_NUMBER
+                  FROM XXTG_EHSCHF_ISSUANCE
+                 WHERE     DOC_TYPE = 'OUTCOMING'
+                       AND DOC_STATUS = 'ERROR'
+                       AND DATE_TRANSACTION BETWEEN TO_DATE ('01.08.2022',
+                                                             'dd.mm.yyyy')
+                                                AND TO_DATE ('31.08.2022',
+                                                             'dd.mm.yyyy'))
 
 
  SELECT SUM (bd.CHARGE) AS CHARGE,
@@ -83,6 +110,24 @@ SELECT *
 SELECT *
   FROM XXTG_EHSCHF_ISSUANCE   
  WHERE  INVOICE_FILE_NUMBER = '190579561-2022-1420803518'
+
+ /* =========================== Find Error =============================*/
+SELECT *
+  FROM XXTG.XXTG_EHSCHF_ISSUANCE XEIS
+ WHERE     XEIS.ID >= 2237479
+       AND ERROR_MESSAGES IS NOT NULL
+       AND DATE_TRANSACTION BETWEEN TO_DATE ('01.08.2022', 'dd.mm.yyyy')
+                                AND TO_DATE ('31.08.2022', 'dd.mm.yyyy')      
+       
+
+SELECT *
+  FROM XXTG.XXTG_EHSCHF_AR_INV XEAI, XXTG.XXTG_EHSCHF_ISSUANCE XEIS
+ WHERE     XEAI.ISSUANCE_ID = XEIS.ID
+      -- AND XEIS.ID >= 2237479
+       AND ERROR_MESSAGES IS NOT NULL
+       AND XEAI.TRX_DATE BETWEEN TO_DATE ('01.08.2022', 'dd.mm.yyyy')
+                             AND TO_DATE ('31.08.2022', 'dd.mm.yyyy')
+/* ===================================================================== */
  
  
  /* AP invoice without receipts */

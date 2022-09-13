@@ -276,7 +276,7 @@ UPDATE inv.mtl_material_transactions
  WHERE     1 = 1
        AND transaction_id =
            (SELECT DISTINCT MTA.TRANSACTION_ID
-              FROM MTL_TRANSACTION_ACCOUNTS   MTA,
+              FROM MTL_TRANSACTIекфON_ACCOUNTS   MTA,
                    MTL_MATERIAL_TRANSACTIONS  MMT
              WHERE     mta.transaction_id = mmt.transaction_id
                    AND mmt.transaction_id =
