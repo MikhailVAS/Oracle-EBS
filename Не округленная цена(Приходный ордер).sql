@@ -60,6 +60,39 @@ UPDATE XXTG.xxtg_unit_cost
  WHERE LOT_NUMBER = '30/08/2010Huawei Tc029692_f930'
  AND CURRENCY_CODE = 'BYN'
 
+ /* Formatted on 13.09.2022 16:36:08 (QP5 v5.326) Service Desk Mihail.Vasiljev */
+UPDATE BOM.CST_INV_LAYERS a
+   SET a.layer_cost =
+           (SELECT unit_cost
+              FROM xxtg_unit_cost
+             WHERE     lot_number =
+                       '211207Комплектование427284'
+                   AND CURRENCY_CODE =
+                       XXTG_GL_CURRENCY_PKG.get_default_currency)
+ WHERE     1 = 1
+       AND CREATE_TRANSACTION_ID IN
+               (SELECT DISTINCT cil.create_transaction_id
+                  FROM inv.mtl_transaction_lot_numbers  mtlnn,
+                       bom.cst_inv_layers               cil,
+                       inv.mtl_material_transactions    mt,
+                       inv.mtl_system_items_b           msib
+                 WHERE     1 = 1
+                       AND cil.create_transaction_id = mt.transaction_id
+                       AND cil.organization_id = mt.organization_id
+                       AND cil.inventory_item_id = mt.inventory_item_id
+                       AND msib.inventory_item_id = cil.inventory_item_id
+                       AND mt.transaction_quantity >= 0
+                       AND mtlnn.transaction_id = mt.transaction_id
+                       AND mtlnn.lot_number =
+                           '211207Комплектование427284')
+       AND a.layer_cost !=
+           (SELECT unit_cost
+              FROM xxtg_unit_cost
+             WHERE     lot_number =
+                       '211207Комплектование427284'
+                   AND CURRENCY_CODE =
+                       XXTG_GL_CURRENCY_PKG.get_default_currency)
+
 --################################################################################
 
 /* Formatted on 14.11.2018 16:38:55 (QP5 v5.318) Service Desk 254751 Mihail.Vasiljev */

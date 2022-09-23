@@ -74,6 +74,25 @@ UPDATE inv.mtl_serial_numbers
        AND CURRENT_SUBINVENTORY_CODE = '168'
        --                                 AND LOT_NUMBER = '14583|Комплектование425757'
        AND CURRENT_STATUS = '3'
+
+--=========================== Find All Serial in transactions  ===========================
+SELECT mut.serial_number,
+       mmt.transaction_id,
+       mmt.transaction_type_id,
+       mmt.transaction_quantity,
+       mtln.lot_number
+  FROM mtl_material_transactions    mmt,
+       mtl_transaction_lot_numbers  mtln,
+       mtl_unit_transactions        mut
+ WHERE     mmt.transaction_id = mtln.transaction_id
+       AND mtln.serial_transaction_id = mut.transaction_id
+       AND mmt.transaction_id IN
+               (SELECT transaction_id
+                  FROM inv.mtl_material_transactions  mt,
+                       inv.mtl_system_items_b         IC
+                 WHERE     mt.ORGANIZATION_ID = IC.ORGANIZATION_ID
+                       AND mt.INVENTORY_ITEM_ID = IC.INVENTORY_ITEM_ID
+                       AND IC.segment1 = '1006633385')
 	   
 --=========================== Change Serial Numbers ===========================						 
 /* Formatted on (QP5 v5.326) Service Desk 480746 Mihail.Vasiljev */
