@@ -85,6 +85,18 @@ UPDATE inv.mtl_material_transactions
    SET Transaction_TYPE_ID = 561                   --  XXTG Flagship Equip W/O
  WHERE transaction_set_id IN (32684144, 32692853)
 
+ /* Find Internal Requisition by material transaction  */
+SELECT ORIG_SYS_DOCUMENT_REF     AS "Internal Req"
+  FROM oe_order_headers_all oeh, mtl_material_transactions mmt
+ WHERE     mmt.TRANSACTION_SOURCE_ID = oeh.SOURCE_DOCUMENT_ID
+       AND mmt.transaction_id = '47242030'
+
+ /* All Transactions in one cell*/
+SELECT LISTAGG (TRANSACTION_ID, ', ') WITHIN GROUP (ORDER BY TRANSACTION_ID)
+           "TR_ID"
+  FROM inv.mtl_material_transactions
+ WHERE 1 = 1 AND transaction_set_id IN (32684144, 32692853)
+
 /* Редкая ситуация , если в тр один тип а в учёте другой (Изменения типа в учёте)*/
 UPDATE inv.mtl_transaction_accounts
    SET TRANSACTION_TYPE_ID = 322
@@ -400,3 +412,22 @@ END;
 --SELECT * FROM  mtl_material_transactions
 --where transaction_set_id in ('46267084','46259677')
 --====================================================================
+
+/* Find all material transactions by Sales order*/
+SELECT *
+  FROM inv.mtl_material_transactions
+ WHERE transaction_set_id IN
+           (SELECT DISTINCT osh.SHIP_ID
+             FROM xxtg_oe_ship_hdr  osh
+                  JOIN xxtg_oe_ship_line osl ON osl.ship_id = osh.ship_id
+                  JOIN oe_order_lines_all ol ON ol.line_id = osl.oe_line_id
+                  JOIN oe_order_headers_all oh ON oh.header_id = ol.header_id
+            WHERE oh.ORDER_NUMBER IN ('287344',
+                                      '287708',
+                                      '287745'))
+
+
+/*Storno transactions by singl transactions*/
+begin
+xxtg_online_transaction_storno.transaction_storno_by_set(48499477, 'SINGLE');
+end;

@@ -13,13 +13,13 @@ UPDATE inv.mtl_system_items_b
 
  UPDATE PO.po_headers_all
    SET CREATION_DATE =
-           TO_DATE ('31.08.2022 12:13:56', 'dd.mm.yyyy hh24:mi:ss')
+           TO_DATE ('31.08.2023 12:13:56', 'dd.mm.yyyy hh24:mi:ss')
  WHERE segment1 IN ('47585')
 
 /* 	Update need by date in  PR*/	
 UPDATE Po_Requisition_Lines_All
    SET NEED_BY_DATE =
-           TO_DATE ('31.08.2022 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
+           TO_DATE ('31.08.2023 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
  WHERE REQUISITION_LINE_ID IN
            (SELECT REQUISITION_LINE_ID
               FROM Po_Requisition_Lines_All l, Po_Requisition_Headers_All h
@@ -31,7 +31,7 @@ UPDATE Po_Requisition_Lines_All
 /* 	Update need by date in  PO*/	   
 UPDATE APPS.PO_LINE_LOCATIONS_all
    SET NEED_BY_DATE =
-           TO_DATE ('31.08.2022 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
+           TO_DATE ('31.08.2023 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
  WHERE po_HEADER_ID IN (SELECT po_header_id
                           FROM PO.po_headers_all
                          WHERE segment1 IN ('43220')); -- Number PO
@@ -39,7 +39,7 @@ UPDATE APPS.PO_LINE_LOCATIONS_all
 /* Update date in Receipt*/
 UPDATE  PO.RCV_TRANSACTIONS
    SET TRANSACTION_DATE =
-           TO_DATE ('31.08.2022 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
+           TO_DATE ('31.08.2023 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
  WHERE PO_HEADER_ID in (SELECT po_header_id
                              FROM PO.po_headers_all
                             WHERE segment1 IN ('54772')); 
@@ -47,7 +47,7 @@ UPDATE  PO.RCV_TRANSACTIONS
  /* Update date in Receipt*/
 UPDATE  PO.RCV_TRANSACTIONS
    SET TRANSACTION_DATE =
-           TO_DATE ('30.04.2022 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
+           TO_DATE ('30.04.2023 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
  WHERE     SHIPMENT_HEADER_ID IN (SELECT SHIPMENT_HEADER_ID
                                     FROM PO.RCV_SHIPMENT_HEADERS
                                    WHERE RECEIPT_NUM IN ('RECEIPT')) --AND TRANSACTION_TYPE = 'CORRECT'
@@ -59,7 +59,7 @@ UPDATE  PO.RCV_TRANSACTIONS
 /* Update date in Receipt by PR*/
 UPDATE PO.RCV_TRANSACTIONS
    SET TRANSACTION_DATE =
-           TO_DATE ('30.04.2022 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
+           TO_DATE ('30.04.2023 23:59:00', 'dd.mm.yyyy hh24:mi:ss')
  WHERE     SHIPMENT_HEADER_ID IN (SELECT SHIPMENT_HEADER_ID
                                     FROM PO.RCV_SHIPMENT_HEADERS
                                    WHERE RECEIPT_NUM IN ('RECEIPT')) --AND TRANSACTION_TYPE = 'CORRECT'
@@ -984,7 +984,7 @@ SELECT apss.VENDOR_SITE_ID, aps.VENDOR_ID,
            AS "УНП",
        NVL2 (TO_CHAR (aps.END_DATE_ACTIVE), 'No', 'Active')
            AS "Статус",
-       aps.VENDOR_TYPE_LOOKUP_CODE
+    aps.VENDOR_TYPE_LOOKUP_CODE
            AS "Тип Фирмы",
        MSI.SECONDARY_INVENTORY_NAME
            AS "Код дилера",
@@ -1016,14 +1016,14 @@ UPDATE PO.PO_HEADERS_ALL po
               FROM ap.ap_suppliers aps, ap.ap_supplier_sites_all apss
              WHERE     aps.vendor_id = apss.vendor_id
                    AND VENDOR_NAME =
-                       'Минский городской центр инжиниринговых услуг'),
+                       'Минский городской центр недвижимости УП'),
        po.vendor_site_id =
            (SELECT apss.VENDOR_SITE_ID
               FROM ap.ap_suppliers aps, ap.ap_supplier_sites_all apss
              WHERE     aps.vendor_id = apss.vendor_id
                    AND VENDOR_NAME =
-                       'Минский городской центр инжиниринговых услуг')
- WHERE po.segment1 = '46464';
+                       'Минский городской центр недвижимости УП')
+ WHERE po.segment1 = '50722';
                     
 
 /* Update vendor in Receipt transactions */
@@ -1033,27 +1033,27 @@ UPDATE PO.RCV_TRANSACTIONS rt
               FROM ap.ap_suppliers aps, ap.ap_supplier_sites_all apss
              WHERE     aps.vendor_id = apss.vendor_id
                    AND VENDOR_NAME =
-                           'Минский городской центр инжиниринговых услуг'),
+                           'Минский городской центр недвижимости УП'),
        rt.vendor_site_id =
            (SELECT apss.VENDOR_SITE_ID
               FROM ap.ap_suppliers aps, ap.ap_supplier_sites_all apss
              WHERE     aps.vendor_id = apss.vendor_id
                    AND VENDOR_NAME =
-                           'Минский городской центр инжиниринговых услуг')
+                           'Минский городской центр недвижимости УП')
  WHERE     po_header_id = (SELECT po_header_id
                              FROM PO.PO_HEADERS_ALL po
-                            WHERE po.segment1 = '46464')
-       AND shipment_header_id =
+                            WHERE po.segment1 = '50722')
+       AND shipment_header_id in
            (SELECT rsh.shipment_header_id
               FROM PO.RCV_SHIPMENT_HEADERS rsh
              WHERE     rsh.shipment_header_id IN
                            (SELECT shipment_header_id
                               FROM PO.RCV_TRANSACTIONS rt
-                             WHERE po_header_id =
+                             WHERE po_header_id in
                                    (SELECT po_header_id
                                       FROM PO.PO_HEADERS_ALL po
-                                     WHERE po.segment1 = '46464'))
-                   AND RECEIPT_NUM = '63734');
+                                     WHERE po.segment1 = '50722'))
+                   AND RECEIPT_NUM in ('67640'));
 
 /* Update vendor in Receipt Header */
 UPDATE PO.RCV_SHIPMENT_HEADERS rsh
@@ -1061,14 +1061,14 @@ UPDATE PO.RCV_SHIPMENT_HEADERS rsh
            (SELECT aps.VENDOR_ID
               FROM ap.ap_suppliers aps
              WHERE  VENDOR_NAME =
-                           'Минский городской центр инжиниринговых услуг')
+                           'Минский городской центр недвижимости УП')
  WHERE     rsh.shipment_header_id IN
                (SELECT shipment_header_id
                   FROM PO.RCV_TRANSACTIONS rt
-                 WHERE po_header_id = (SELECT po_header_id
+                 WHERE po_header_id in (SELECT po_header_id
                                          FROM PO.PO_HEADERS_ALL po
-                                        WHERE po.segment1 = '46464'))
-       AND RECEIPT_NUM = '63734';
+                                        WHERE po.segment1 = '50722'))
+       AND RECEIPT_NUM in ('67640');
 
 
 /* №PO, 
@@ -1190,7 +1190,7 @@ UPDATE PO.RCV_SHIPMENT_HEADERS rsh
                  DUAL
            WHERE     1 = 1
                  --AND POH.PO_HEADER_ID in (240193)
-                 --AND PO_ST.PO_CREATION_DATE BETWEEN TO_DATE('01.01.2021','DD.MM.RRRR') AND TO_DATE('30.04.2022','DD.MM.RRRR')
+                 --AND PO_ST.PO_CREATION_DATE BETWEEN TO_DATE('01.01.2021','DD.MM.RRRR') AND TO_DATE('30.04.2023','DD.MM.RRRR')
                  AND PLL.NEED_BY_DATE BETWEEN TO_DATE ('01.01.2021',
                                                        'DD.MM.RRRR')
                                           AND TO_DATE ('01.01.2021',
@@ -1419,3 +1419,75 @@ declare
    
 commit;   
   END ;      
+
+
+  /* 635920 Приход средневзвешенный курс 
+ (QP5 v5.326) Service Desk 635920 Mihail.Vasiljev */
+UPDATE PO.po_headers_all
+   SET RATE_DATE = TO_DATE ('18.11.2023', 'dd.mm.yyyy'),
+       RATE = 2.4355,
+       RATE_TYPE = 'Spot'
+WHERE segment1 IN ('49941')
+
+/* Formatted (QP5 v5.326) Service Desk 635920 Mihail.Vasiljev */
+UPDATE PO.po_distributions_all
+   SET RATE_DATE = TO_DATE ('18.11.2023', 'dd.mm.yyyy'), RATE = 2.4355
+WHERE PO_DISTRIBUTION_ID in ( 1629200 ,1629201)
+
+/* Formatted on (QP5 v5.388) Service Desk 647730 Исправление суммы в PR Mihail.Vasiljev */
+UPDATE po_line_locations_all
+   SET QUANTITY = :QUANTITY
+ WHERE PO_LINE_ID = :PO_LINE_ID
+
+/* Formatted on (QP5 v5.388) Service Desk 647730 Исправление суммы в PR Mihail.Vasiljev */
+SELECT QUANTITY,
+       (SELECT PLA2.QUANTITY
+         FROM PO_LINES_ALL PLA2
+        WHERE     PLA2.po_header_id = PLLA.po_header_id
+              AND PLA2.PO_LINE_ID = PLLA.PO_LINE_ID)
+  FROM po_line_locations_all PLLA
+ WHERE     PLLA.po_header_id IN (SELECT PHA1.po_header_id
+                                   FROM PO.po_headers_all PHA1
+                                  WHERE PHA1.segment1 IN ('46378'))
+       AND PLLA.PO_LINE_ID IN
+               (SELECT PLA1.PO_LINE_ID
+                 FROM PO_LINES_ALL PLA1
+                WHERE     po_header_id IN (SELECT PHA2.po_header_id
+                                             FROM PO.po_headers_all PHA2
+                                            WHERE PHA2.segment1 IN ('46378'))
+                      AND PLA1.LINE_NUM IN (12,
+                                            24,
+                                            36,
+                                            48,
+                                            60,
+                                            72,
+                                            84,
+                                            96,
+                                            108,
+                                            120,
+                                            132,
+                                            144))
+
+/* Formatted  (QP5 v5.388) Service Desk 653181 Mihail.Vasiljev */
+/* Close PO for Receiving in iProcurment1 */
+UPDATE po_lines_all 
+   SET CLOSED_CODE = 'CLOSED'
+ WHERE PO_HEADER_ID IN
+           (SELECT poh.po_header_id
+             FROM po_headers_all poh
+            WHERE     --NVL (poh.closed_code, 'OPEN') = 'OPEN' AND
+                   poh.segment1 IN ('24739'))
+   AND CLOSED_CODE != 'CLOSED';
+   
+   
+/* Formatted  (QP5 v5.388) Service Desk 653181 Mihail.Vasiljev */
+/* Close PO for Receiving in iProcurment2 */
+  UPDATE PO_LINE_LOCATIONS_ALL
+      SET CLOSED_CODE = 'CLOSED'
+ WHERE PO_HEADER_ID IN
+           (SELECT poh.po_header_id
+              FROM po_headers_all poh
+            WHERE     --NVL (poh.closed_code, 'OPEN') = 'OPEN' AND
+                   poh.segment1 IN ('24739'))
+   AND CLOSED_CODE != 'CLOSED';
+   

@@ -37,7 +37,46 @@ AND   prl.destination_organization_id  =   ood.organization_id
 AND   prl.source_organization_id       =   ood1.organization_id
 --AND prh.creation_date BETWEEN TO_DATE ('01.01.2021 00:00:00', 'dd.mm.yyyy hh24:mi:ss')  AND TO_DATE ('31.12.2021 23:59:00', 'dd.mm.yyyy hh24:mi:ss') 
 
+/* Find Internal Requisition by material transaction  */
+SELECT ORIG_SYS_DOCUMENT_REF     AS "Internal Req"
+  FROM oe_order_headers_all oeh, mtl_material_transactions mmt
+ WHERE     mmt.TRANSACTION_SOURCE_ID = oeh.SOURCE_DOCUMENT_ID
+       AND mmt.transaction_id = '47242030'
 
+CREATE TABLE XXTG.ABC(
+    ITEM VARCHAR2(50) NOT NULL, 
+    SYBINVENTORY VARCHAR2(50) NOT NULL,
+    LOT VARCHAR2(50) NOT NULL,
+    DATE_RICEIPT date 
+);
+
+/* Delete Last simbol in item*/
+UPDATE XXTG.ABC
+   SET ITEM = SUBSTR (ITEM, 1, LENGTH (ITEM) - 1) 
+
+/* Find all IR by Item,Lot,Subinv */
+SELECT TT.ITEM,
+       TT.SYBINVENTORY,
+       TT.LOT,
+       TT.DATE_RICEIPT,
+       (SELECT LISTAGG (oeh.ORIG_SYS_DOCUMENT_REF, ', ')
+                   WITHIN GROUP (ORDER BY oeh.ORIG_SYS_DOCUMENT_REF)
+                   AS IR
+          FROM MTL_MATERIAL_TRANSACTIONS  MMT,
+               MTL_TRANSACTION_LOT_VAL_V  MTLV,
+               MTL_SYSTEM_ITEMS_B         MSIB,
+               oe_order_headers_all       oeh
+         WHERE     MMT.ORGANIZATION_ID = MSIB.ORGANIZATION_ID
+               AND MMT.INVENTORY_ITEM_ID = MSIB.INVENTORY_ITEM_ID
+               AND mmt.TRANSACTION_SOURCE_ID = oeh.SOURCE_DOCUMENT_ID
+               AND MMT.TRANSACTION_ID = MTLV.TRANSACTION_ID(+)
+               AND MSIB.SEGMENT1 = TT.ITEM
+               AND MMT.SUBINVENTORY_CODE = TT.SYBINVENTORY
+               AND MTLV.LOT_NUMBER = TT.LOT
+--               AND MMT.TRANSACTION_DATE = TT.DATE_RICEIPT
+                                           )
+           AS IR
+  FROM XXTG.ABC TT
 
 /* Formatted on 1/30/2019 4:34:50 PM (QP5 v5.227.12220.39754)*/
 SELECT nd.NAME,

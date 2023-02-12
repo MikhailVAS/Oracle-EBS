@@ -43,9 +43,10 @@ SELECT '''' || SERIAL_NUMBER || ''','
                          '893750305090076396',
                          '893750305090076397',
                          '893750305090076398')
-       AND INVENTORY_ITEM_ID = (SELECT DISTINCT INVENTORY_ITEM_ID
+       AND INVENTORY_ITEM_ID in (SELECT DISTINCT INVENTORY_ITEM_ID
                                   FROM inv.mtl_system_items_b a
-                                 WHERE a.SEGMENT1 = '1051000126')
+                                 WHERE a.SEGMENT1 in ('1013111033'))
+
 
 --==================== Transaction Move Order Change Serial Numbers ====================	
 /* SD не комплектуется строка 2502353 

@@ -20,7 +20,7 @@ SELECT aps.VENDOR_ID,
            WHEN 85 THEN 'BHW: Головной офис Бест'
            WHEN 86 THEN 'BSW: Подрядчики'
            ELSE 'Слад не привязан'
-       END
+    END
            AS "Наименованеи_склада"
   FROM ap.ap_suppliers                aps,
        ap.ap_supplier_sites_all       apss,
@@ -480,3 +480,49 @@ where 1=1
    WHERE 1 = 1
 ORDER BY aps.VAT_REGISTRATION_NUM
 
+
+/* Find all vendor with incorrect Employee*/
+SELECT DISTINCT pv.VENDOR_ID,
+                pv.VENDOR_NAME,
+                --       pv.VENDOR_NAME_ALT,
+                pv.SEGMENT1,
+                pv.VENDOR_TYPE_LOOKUP_CODE,
+                pv.PAY_GROUP_LOOKUP_CODE,
+                emp.full_name     AS employee_full_name,
+                hp.party_name     AS hz_party_name
+  FROM po_vendors               pv,
+       ap_awt_groups            aag,
+       ap_awt_groups            pay_aag,
+       rcv_routing_headers      rcpt,
+       fnd_currencies_tl        fct,
+       fnd_currencies_tl        pay,
+       fnd_lookup_values        pay_group,
+       ap_terms_tl              terms,
+       po_vendors               parent1,
+       per_employees_current_x  emp,
+       hz_parties               hp,
+       AP_INCOME_TAX_TYPES      aptt,
+       per_all_people_f         papf
+ WHERE     1 = 1
+       -- pv.vendor_id =  '12086'
+       AND pv.party_id = hp.party_id
+       AND pv.parent_vendor_id = parent1.vendor_id(+)
+       AND pv.awt_group_id = aag.GROUP_ID(+)
+       AND pv.pay_awt_group_id = pay_aag.GROUP_ID(+)
+       AND pv.RECEIVING_ROUTING_ID = rcpt.ROUTING_HEADER_ID(+)
+       AND fct.language(+) = USERENV ('lang')
+       AND pay.language(+) = USERENV ('lang')
+       AND pv.invoice_currency_code = fct.currency_code(+)
+       AND pv.payment_currency_code = pay.currency_code(+)
+       AND pv.pay_group_lookup_code = pay_group.lookup_code(+)
+       AND pay_group.lookup_type(+) = 'PAY GROUP'
+       AND pay_group.language(+) = USERENV ('lang')
+       AND pv.terms_id = terms.term_id(+)
+       AND terms.language(+) = USERENV ('LANG')
+       AND terms.enabled_flag(+) = 'Y'
+       AND pv.employee_id = emp.employee_id(+)
+       AND pv.employee_id = papf.person_id(+)
+       AND pv.type_1099 = aptt.income_tax_type(+)
+       AND pv.VENDOR_NAME != hp.party_name
+       AND pv.VENDOR_TYPE_LOOKUP_CODE = 'EMPLOYEE'
+       AND pv.VENDOR_NAME != emp.full_name

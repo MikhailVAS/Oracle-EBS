@@ -34,9 +34,9 @@ Change Date
 /* Shipping Initial_pickup_date , ULTIMATE_DROPOFF_DATE */
 UPDATE wsh.wsh_new_deliveries
    SET INITIAL_PICKUP_DATE =
-           TO_DATE ('21.01.2022 9:00:00', 'dd.mm.yyyy hh.mi.ss'),
+           TO_DATE ('21.01.2023 9:00:00', 'dd.mm.yyyy hh.mi.ss'),
        ULTIMATE_DROPOFF_DATE =
-           TO_DATE ('21.01.2022 23:59:00', 'dd.mm.yyyy hh24:mi:ss')    
+           TO_DATE ('21.01.2023 23:59:00', 'dd.mm.yyyy hh24:mi:ss')    
  WHERE name = 'ВТ 0060156';
 
  /* Formatted on (QP5 v5.326) Service Desk 417327 Mihail.Vasiljev */
@@ -59,7 +59,7 @@ UPDATE WSH.WSH_DELIVERY_ASSIGNMENTS DD
 -- 2.MTL_MATERIAL_TRANSACTIONS with one
 UPDATE INV.MTL_MATERIAL_TRANSACTIONS
    SET transaction_set_id =
-           (SELECT DISTINCT transaction_set_id
+           (SELECT MIN(transaction_set_id)
               FROM INV.MTL_MATERIAL_TRANSACTIONS
              WHERE SHIPMENT_NUMBER IN ('НГ 2841171'))
  WHERE SHIPMENT_NUMBER IN ('798109')
@@ -88,6 +88,17 @@ DELETE FROM MTL_TXN_REQUEST_HEADERS MTRH
 UPDATE wsh.wsh_delivery_details
    SET RELEASED_STATUS = 'B', INV_INTERFACED_FLAG = 'N', MOVE_ORDER_LINE_ID = null
  WHERE delivery_detail_id IN (646874,646873)
+
+ /* Formatted on (QP5 v5.326) Service Desk  632496 Mihail.Vasiljev */
+UPDATE wsh.wsh_delivery_details
+   SET RELEASED_STATUS = 'B', INV_INTERFACED_FLAG = 'N', MOVE_ORDER_LINE_ID = null
+ WHERE delivery_detail_id IN (
+           (SELECT DISTINCT DDA.delivery_detail_id
+              FROM WSH.WSH_DELIVERY_ASSIGNMENTS  DDA,
+                   WSH.WSH_NEW_DELIVERIES        DND
+             WHERE     DND.name IN ('854270')
+                   AND DDA.DELIVERY_ID = DND.DELIVERY_ID))
+
       
 SELECT * FROM  wsh.wsh_delivery_details DD
 --set c = 'P'

@@ -149,7 +149,43 @@ UPDATE QP_PRICING_ATTRIBUTES
    SET PRODUCT_UOM_CODE = 'M2'
  WHERE LIST_LINE_ID = 1088941		 
 		 
-		 
+SELECT DISTINCT LOT_DIVISIBLE_FLAG,
+       LOT_STATUS_ENABLED,
+       DEFAULT_LOT_STATUS_ID,
+       SERIAL_STATUS_ENABLED,
+       DEFAULT_SERIAL_STATUS_ID,
+       LOT_SPLIT_ENABLED,
+       SERIAL_NUMBER_CONTROL_CODE,
+       START_AUTO_SERIAL_NUMBER,
+       AUTO_SERIAL_ALPHA_PREFIX
+  FROM inv.mtl_system_items_b
+ WHERE SEGMENT1 IN ('1013520378')
+
+ /* Change to Serial item */
+UPDATE inv.mtl_system_items_b
+   SET LOT_DIVISIBLE_FLAG = 'Y',
+       LOT_STATUS_ENABLED = 'Y',
+       DEFAULT_LOT_STATUS_ID = 1,
+       SERIAL_STATUS_ENABLED = 'Y',
+       DEFAULT_SERIAL_STATUS_ID = 1,
+       LOT_SPLIT_ENABLED = 'Y',
+       SERIAL_NUMBER_CONTROL_CODE = 5,
+       START_AUTO_SERIAL_NUMBER = 1,
+       AUTO_SERIAL_ALPHA_PREFIX = 'S'
+ WHERE SEGMENT1 IN ('1001024714')
+
+ /* Change to Not Serial item */
+UPDATE inv.mtl_system_items_b
+   SET LOT_DIVISIBLE_FLAG = 'Y',
+       LOT_STATUS_ENABLED = 'Y',
+       DEFAULT_LOT_STATUS_ID = 1,
+       SERIAL_STATUS_ENABLED = 'N',
+       DEFAULT_SERIAL_STATUS_ID = NULL,
+       LOT_SPLIT_ENABLED = 'Y',
+       SERIAL_NUMBER_CONTROL_CODE =1,
+       START_AUTO_SERIAL_NUMBER = NULL,
+       AUTO_SERIAL_ALPHA_PREFIX = NULL
+ WHERE SEGMENT1 IN ('1013520378')		 
 		 
 		 /* Formatted on 20.12.2018 12:19:14 (QP5 v5.318) Service Desk  Mihail.Vasiljev */
   SELECT  MSIB.INVENTORY_ITEM_ID,MSIB.ORGANIZATION_ID,
@@ -215,8 +251,54 @@ SELECT template_id,
        (SELECT TEMPLATE_ID
           FROM MTL_ITEM_TEMPLATES_ALL_V
          WHERE UPPER (TEMPLATE_NAME) LIKE 'XXTG_ITEM_INV_LOT_CTRL');
+
+ /* Item Category Assignment */
+SELECT DISTINCT 
+       (SELECT DISTINCT FIFS.ID_FLEX_STRUCTURE_NAME
+          FROM APPS.FND_ID_FLEX_STRUCTURES_VL FIFS
+         WHERE     MCB.STRUCTURE_ID = FIFS.ID_FLEX_NUM
+               AND FIFS.APPLICATION_ID = 401
+               AND FIFS.ID_FLEX_CODE = 'MCAT'  )
+           "Item Category Assignment",
+       MCB.CONCATENATED_SEGMENTS,
+       MCT.DESCRIPTION,
+       MCB.ENABLED_FLAG,
+       to_date(MCB.DISABLE_DATE,'DD.MM.YY') DISABLE_DATE ,
+       MCB.ATTRIBUTE1
+           "Local Account",
+       MCB.ATTRIBUTE2
+           "In Use Account",
+       MCB.ATTRIBUTE3
+           "Analytic Account",
+       MCB.ATTRIBUTE4
+           "Detail Account",
+       MCB.ATTRIBUTE13
+           "Type of activity",
+       MCB.ATTRIBUTE7
+           "Vat Rate Reporting",
+           MCB.SEGMENT1,
+           MCB.SEGMENT2,
+           MCB.SEGMENT3,
+           MCB.SEGMENT4,
+           MCB.SEGMENT5,
+           MCB.SEGMENT6,
+           MCB.SEGMENT7,
+           MCB.SEGMENT8,
+           to_date (MCB.CREATION_DATE,'dd.mm.yy') CREATION_DATE ,
+           to_date (MCB.LAST_UPDATE_DATE,'dd.mm.yy') LAST_UPDATE_DATE
+--          , mic.*
+FROM  --APPS.mtl_item_categories mic, 
+      APPS.MTL_CATEGORIES_B_KFV MCB,
+      MTL_CATEGORIES_TL          MCT
+        WHERE     --MCB.CATEGORY_ID = MIC.CATEGORY_ID AND
+          MCB.CATEGORY_ID = MCT.CATEGORY_ID
+       AND MCT.LANGUAGE = USERENV ('LANG')
+  AND  MCB.CONCATENATED_SEGMENTS != 'Inventory'
+--MIC.INVENTORY_ITEM_ID = a.INVENTORY_ITEM_ID
+--AND  CONCATENATED_SEGMENTS = 'Capex.ICT.Hardware.Office/Personal Systems.Technical Office Equipment.Desktop Computer.Other.Other'
+--ORDER BY MCB.LAST_UPDATE_DATE DESC        
 		 
-/* Item Category Assignment */
+/* Item Category Assignment2 */
 SELECT DISTINCT
        a.SEGMENT1,
        a.DESCRIPTION,

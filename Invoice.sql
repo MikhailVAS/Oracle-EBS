@@ -131,6 +131,10 @@ SELECT *
                              AND TO_DATE ('31.08.2022', 'dd.mm.yyyy')
 /* ===================================================================== */
  
+ /* Find AP invoice */
+SELECT *
+  FROM XXTG_EHSCHF_AP_INV
+ WHERE ISSUANCE_NUM = '1420847248'
  
  /* AP invoice without receipts */
 SELECT DISTINCT aia.*
@@ -166,9 +170,18 @@ ORDER BY XEAI.INVOICE_NUM;
 --4. Бухгалтер проверяет список, отмечает зелёным строки что будет надо грузить, высылает Мише.
 --5. После проверки наличия ошибки Миша берёт ISSUANCE_ID тех записи, которую надо обновить для загрузки на портал и обновляет статус:
 UPDATE XXTG.XXTG_EHSCHF_ISSUANCE
-SET DOC_STATUS = 'NEW'
+SET DOC_STATUS = 'NEW',
+               INVOICE_NUM =
+                   (SELECT INVOICE_NUM + 1 FROM XXTG_EHSCHF_INVOICES), --Seq+1
+               XML_DOCUMENT = NULL,
+               XML_FILE = NULL,
+               FILE_NAME = NULL,
+               INVOICE_FILE_NUMBER = NULL
 WHERE 1 != 1
 AND ID = 573073;
+
+UPDATE APPS.XXTG_EHSCHF_INVOICES
+           SET INVOICE_NUM = INVOICE_NUM + 1, LAST_UPDATED_DATE = SYSDATE;
 --6. Сообщает бухгалтеру, что статус документов обновлён и можно выполнять по ним действия, начиная
 -- с п.5 инструкции Шириной. Если бух возбухает - Миша может согласиться провести документ по статусам за неё,
 -- но только в качестве исключения, потому что выверять перед отправкой должна бух.

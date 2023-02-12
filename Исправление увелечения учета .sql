@@ -9,6 +9,16 @@ GROUP BY TRANSACTION_ID
   HAVING COUNT (*) > 3
 ORDER BY 2 DESC;
 
+/* Formatted on  (QP5 v5.388) Service Desk 562355 Mihail.Vasiljev */
+SELECT *
+  FROM xxtg.xxtg_gl001_double_global g1
+ WHERE (   C_DOC_ID IN (SELECT TRANSACTION_ID
+                          FROM mtl_material_transactions
+                         WHERE transaction_set_id IN ('46645051'))
+        OR d_DOC_ID IN (SELECT TRANSACTION_ID
+                          FROM mtl_material_transactions
+                         WHERE transaction_set_id IN ('46645051')));
+
 -- Service Desk 562355
 delete (
 select a.* from xla.xla_ae_lines a where 1=1

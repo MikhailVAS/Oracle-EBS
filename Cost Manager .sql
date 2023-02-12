@@ -15,9 +15,9 @@ UPDATE xla_events
                                                           47015310,
                                                           47015323)));
 
-/* Formatted on 05.09.2022 14:58:17 (QP5 v5.326) Service Desk  614127 Mihail.Vasiljev */
+/* Formatted (QP5 v5.326) Service Desk  614127 Mihail.Vasiljev */
 DELETE FROM mtl_cst_layer_act_cost_details
-      WHERE TRANSACTION_ID = '48066316'
+      WHERE TRANSACTION_ID = :TR_ID
 
 /* =========================   Исправление  Кол-во ============================*/     
 UPDATE bom.cst_inv_layers

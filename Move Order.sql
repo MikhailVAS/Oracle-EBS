@@ -1,3 +1,12 @@
+/* Formatted on (QP5 v5.388) Service Desk 642309 Mihail.Vasiljev */
+UPDATE MTL_TXN_REQUEST_LINES
+   SET FROM_LOCATOR_ID =
+           (SELECT INVENTORY_LOCATION_ID
+              FROM mtl_item_locations_kfv
+             WHERE CONCATENATED_SEGMENTS = '2342.Демонтаж.7439')
+WHERE HEADER_ID = 3908071 -- MOVE_ORDER_HEADER_ID
+
+
 --SELECT *
 --  FROM mtl_txn_request_lines mtrl
 -- WHERE mtrl.header_id = (SELECT HEADER_ID

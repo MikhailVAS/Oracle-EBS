@@ -8,6 +8,17 @@ SELECT vendor_id,VENDOR_NAME, attribute3
 UPDATE APPS.ap_suppliers
    SET attribute3 = NULL
  WHERE vendor_id IN (1253367)
+
+ 
+UPDATE AP_EXPENSE_REPORT_HEADERS_ALL
+   SET ATTRIBUTE9 = TO_DATE ('04.10.2022 00:00:00', 'dd.mm.yyyy hh24:mi:ss'),
+       ATTRIBUTE10 = TO_DATE ('04.10.2022 00:00:00', 'dd.mm.yyyy hh24:mi:ss'),
+       ATTRIBUTE11 = TO_DATE ('04.10.2022 00:00:00', 'dd.mm.yyyy hh24:mi:ss')
+ WHERE invoice_num IN ('BST377274')
+
+ UPDATE ap_expense_report_lines_all
+   SET  START_EXPENSE_DATE = to_date('04.10.2022','dd.mm.yyyy') , END_EXPENSE_DATE = to_date('04.10.2022','dd.mm.yyyy') 
+ WHERE REPORT_HEADER_ID = 377274
  
 /* Formatted on 17.07.2020 17:25:02 (QP5 v5.326) Service Desk  Mihail.Vasiljev */
 SELECT DISTINCT *
@@ -23,7 +34,7 @@ SELECT DISTINCT *
  --         gl_code_combinations_kfv ccid,
  --         PER_PEOPLE_F wf
  WHERE     erd.report_header_id = erh.report_header_id
-       AND erh.invoice_num IN ('BST189201')
+       AND erh.invoice_num IN ('BST377274')
 --         AND ccid.code_combination_id = erd.code_combination_id
 --         AND EXPENSE_STATUS_CODE = 'ERROR'
 --         AND wf.person_id = erh.employee_id
