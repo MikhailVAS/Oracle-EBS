@@ -23,6 +23,13 @@ s.inst_id=ffs.inst_id(+) and (l.id1, l.id2, l.type) in (select id1, id2, type fr
 /* We kill blocking*/   
 alter system kill session '927,28493,@1' immediate;
 
+SELECT DISTINCT s.username
+FROM v$session s
+WHERE s.type = 'USER'
+AND s.status = 'ACTIVE'
+AND s.program LIKE '%oracle.apps%'
+ORDER BY s.username;
+
 
 /* Find Locked Table */
 select lo.session_id,lo.oracle_username,lo.os_user_name,
