@@ -31,7 +31,7 @@ INSERT INTO APPS.FND_USER_PREFERENCES (USER_NAME,
 /* Formatted on 17.02.2021 22:36:44 (QP5 v5.326) Service Desk 456402 Mihail.Vasiljev */
 UPDATE WF_NOTIFICATIONS
    SET STATUS = 'OPEN'
- WHERE     MESSAGE_TYPE = 'XXPAYGRP'                                    -- тип
+ WHERE     MESSAGE_TYPE = 'XXTG_ITM'                                    -- тип
        AND ORIGINAL_RECIPIENT = UPPER ('Mariya.Skripko')               -- кому
        AND BEGIN_DATE >=
            TO_DATE ('11.02.2021 08:00:00', 'dd.mm.yyyy hh24:mi:ss')
