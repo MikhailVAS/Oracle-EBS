@@ -56,6 +56,7 @@ SELECT fu.user_name                "User Name",
    AND fr.application_id        =  fat.application_id
    AND frt.language             =  USERENV('LANG')
    AND UPPER(fu.user_name)      =  UPPER('AMOHSIN')  -- <change it>
+   AND fu.END_DATE is NULL
    -- AND (furg.end_date IS NULL OR furg.end_date >= TRUNC(SYSDATE))
  ORDER BY frt.responsibility_name;
 

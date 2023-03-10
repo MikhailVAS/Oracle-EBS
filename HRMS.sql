@@ -12,6 +12,8 @@ SELECT f.USER_NAME     "FND USER NAME",
        AND wfr.NAME = r.ROLE_NAME
        AND r.user_name = '&username';
 
+       
+
 /* Update cost center by FIO*/
 UPDATE APPS.PAY_COST_ALLOCATIONS_F
    SET COST_ALLOCATION_KEYFLEX_ID =
