@@ -37,6 +37,11 @@ AND   prl.destination_organization_id  =   ood.organization_id
 AND   prl.source_organization_id       =   ood1.organization_id
 --AND prh.creation_date BETWEEN TO_DATE ('01.01.2021 00:00:00', 'dd.mm.yyyy hh24:mi:ss')  AND TO_DATE ('31.12.2021 23:59:00', 'dd.mm.yyyy hh24:mi:ss') 
 
+/*  Change of payment terms in internal requisition(QP5 v5.388) Service Desk 666305 Mihail.Vasiljev */
+UPDATE po_requisition_headers_all
+   SET ATTRIBUTE7 = '11285'
+ WHERE segment1 IN ('128744', '128745')
+
 /* Find Internal Requisition by material transaction  */
 SELECT ORIG_SYS_DOCUMENT_REF     AS "Internal Req"
   FROM oe_order_headers_all oeh, mtl_material_transactions mmt
