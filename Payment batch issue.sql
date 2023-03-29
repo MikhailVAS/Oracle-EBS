@@ -17,6 +17,29 @@ UPDATE ap.AP_PAYMENT_SCHEDULES_ALL
 DELETE FROM ap.AP_SELECTED_INVOICES_ALL
       WHERE invoice_id IN (603451)
 
+--################# Payment Batch error with inorrect bank Acount ###################
+
+/* Formatted on (QP5 v5.326) Service 667827 Desk Mihail.Vasiljev */
+UPDATE ap.AP_PAYMENT_SCHEDULES_ALL
+   SET EXTERNAL_BANK_ACCOUNT_ID = '40016' -- BY34ALFA30122674810010270000
+WHERE invoice_id IN (1160493,1160495,1160494)
+
+/* Formatted on  (QP5 v5.326) Service Desk 667827 Mihail.Vasiljev */
+UPDATE ap.AP_SELECTED_INVOICES_ALL
+   SET EXTERNAL_BANK_ACCOUNT_ID = '40016' -- BY34ALFA30122674810010270000
+WHERE invoice_id IN (1160493,1160495,1160494)
+
+/* Formatted on  (QP5 v5.326) Service Desk 667827 Mihail.Vasiljev */
+UPDATE ap.ap_invoices_all
+   SET EXTERNAL_BANK_ACCOUNT_ID = '40016' -- BY34ALFA30122674810010270000
+WHERE invoice_id IN (1160493,1160495,1160494)
+
+/* Formatted on  (QP5 v5.326) Service Desk 667827 Mihail.Vasiljev */
+UPDATE IBY_DOCS_PAYABLE_ALL
+   SET EXTERNAL_BANK_ACCOUNT_ID = '40016'
+ WHERE CALLING_APP_DOC_UNIQUE_REF2 IN (1160493, 1160495, 1160494)
+
+ --##############################################################################
 
 select * from ap.ap_invoices_all where invoice_num in ('��� 101')
 
