@@ -34,7 +34,7 @@ COMMIT;
 --X -  Terminate
 --G -  Warning
 
-На этом этапе возможно зависание Update, т.к. менеджеры не сразу фиксируют изменения и пока именно этот менеджер (1 из 30) не выполнит, какой нить другой запрос, все может висеть. Поэтому проверяем блокировку
+--На этом этапе возможно зависание Update, т.к. менеджеры не сразу фиксируют изменения и пока именно этот менеджер (1 из 30) не выполнит, какой нить другой запрос, все может висеть. Поэтому проверяем блокировку
 SELECT
    s.blocking_session, 
    s.sid, 
@@ -45,5 +45,14 @@ FROM
 WHERE
    blocking_session IS NOT NULL;
 
-Если статус сессии которая блокирует ‘INACTIVE’ то убиваем ее, подставляя соотвествующие значения.
+--Если статус сессии которая блокирует ‘INACTIVE’ то убиваем ее, подставляя соотвествующие значения.
 exec admin.kill_session(<sid>,<serial>);  
+
+-- Alternatively, you can also cancel a concurrent script using SQL queries. Here's an example SQL query that cancels a concurrent script:
+
+UPDATE fnd_concurrent_requests
+SET phase_code = 'C',
+    status_code = 'X',
+    actual_completion_date = SYSDATE,
+    completion_text = 'Cancelled by user'
+WHERE request_id = <request_id>;
