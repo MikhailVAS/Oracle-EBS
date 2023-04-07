@@ -47,6 +47,49 @@ SELECT '''' || SERIAL_NUMBER || ''','
                                   FROM inv.mtl_system_items_b a
                                  WHERE a.SEGMENT1 in ('1013111033'))
 
+--==================== Find all serial item without serial numbers ====================	
+SELECT DISTINCT
+              CASE moq.ORGANIZATION_ID
+           WHEN 82 THEN 'BMW: Организация ведения ТМЦ'
+           WHEN 83 THEN 'BBW: Склад Бест'
+           WHEN 84 THEN 'BDW: Дилеры'
+           WHEN 85 THEN 'BHW: Головной офис Бест'
+           WHEN 86 THEN 'BSW: Подрядчики'
+           WHEN 1369 THEN 'BFC: Строительство ОС'
+           ELSE 'Other warehouse'
+       END                      AS "Наименованеи_организации",
+       moq.subinventory_code
+           AS subinventory_code,
+       moq.locator_id
+           AS locator_id,
+       (SELECT DISTINCT SEGMENT1
+          FROM mtl_system_items_b sb
+         WHERE moq.inventory_item_id = sb.INVENTORY_ITEM_ID)
+           AS item,
+       moq.lot_number
+           AS lot_number,
+       msn.serial_number
+  FROM mtl_onhand_quantities_detail moq, mtl_serial_numbers msn
+ WHERE         
+           moq.inventory_item_id IN
+               (SELECT DISTINCT msi.INVENTORY_ITEM_ID
+                 FROM mtl_system_items_b            msi,
+                      mtl_onhand_quantities_detail  mohd
+                WHERE     mohd.ORGANIZATION_ID = msi.ORGANIZATION_ID
+                      AND mohd.INVENTORY_ITEM_ID = msi.INVENTORY_ITEM_ID
+                      AND msi.DEFAULT_SERIAL_STATUS_ID IS NOT NULL)
+       AND moq.ORGANIZATION_ID = msn.CURRENT_ORGANIZATION_ID(+)
+       AND moq.SUBINVENTORY_CODE = msn.CURRENT_SUBINVENTORY_CODE(+)
+       AND moq.INVENTORY_ITEM_ID = msn.INVENTORY_ITEM_ID(+)
+       AND moq.lot_number = msn.LOT_NUMBER(+)
+--     AND moq.organization_id    = :2
+     AND moq.subinventory_code = 'ScrapSub'
+--     AND moq.inventory_item_id IN (SELECT DISTINCT INVENTORY_ITEM_ID
+--                                       FROM mtl_system_items_b
+--                                      WHERE SEGMENT1 IN ('1013001503'))
+--     AND moq.lot_number IN
+--               ('140710Технолог_НПЦ_ООО_Р029707',
+--                '120717Технолог_НПЦ_ООО_Р005148SN')
 
 --==================== Transaction Move Order Change Serial Numbers ====================	
 /* SD не комплектуется строка 2502353 
