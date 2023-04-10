@@ -48,6 +48,147 @@ SELECT '''' || SERIAL_NUMBER || ''','
                                  WHERE a.SEGMENT1 in ('1013111033'))
 
 --==================== Find all serial item without serial numbers ====================	
+
+Select * FROM (SELECT DISTINCT
+              CASE moq.ORGANIZATION_ID
+           WHEN 82 THEN 'BMW: Организация ведения ТМЦ'
+           WHEN 83 THEN 'BBW: Склад Бест'
+           WHEN 84 THEN 'BDW: Дилеры'
+           WHEN 85 THEN 'BHW: Головной офис Бест'
+           WHEN 86 THEN 'BSW: Подрядчики'
+           WHEN 1369 THEN 'BFC: Строительство ОС'
+           ELSE 'Other warehouse'
+       END                      AS "Наименованеи_организации",
+       moq.subinventory_code
+           AS subinventory_code,
+       moq.locator_id
+           AS locator_id,
+       (SELECT DISTINCT SEGMENT1
+          FROM mtl_system_items_b sb
+         WHERE moq.inventory_item_id = sb.INVENTORY_ITEM_ID)
+           AS item,
+       moq.lot_number
+           AS lot_number,
+       msn.serial_number
+  FROM mtl_onhand_quantities_detail moq, mtl_serial_numbers msn
+ WHERE         
+           moq.inventory_item_id IN
+               (SELECT DISTINCT msi.INVENTORY_ITEM_ID
+                 FROM mtl_system_items_b            msi,
+                      mtl_onhand_quantities_detail  mohd
+                WHERE     mohd.ORGANIZATION_ID = msi.ORGANIZATION_ID
+                      AND mohd.INVENTORY_ITEM_ID = msi.INVENTORY_ITEM_ID
+                      AND msi.DEFAULT_SERIAL_STATUS_ID IS NOT NULL)      
+       AND moq.ORGANIZATION_ID = msn.CURRENT_ORGANIZATION_ID(+)
+       AND moq.SUBINVENTORY_CODE = msn.CURRENT_SUBINVENTORY_CODE(+)
+       AND moq.INVENTORY_ITEM_ID = msn.INVENTORY_ITEM_ID(+)
+       AND moq.lot_number = msn.LOT_NUMBER(+)
+--     AND moq.organization_id    = :2
+     AND moq.subinventory_code = 'ScrapSub') WHERE serial_number is NULL
+
+
+/*Repair serial item without serial numbers Service Desk 670383 Mihail.Vasiljev */
+DECLARE
+BEGIN
+    FOR r
+        IN (Select * FROM (SELECT DISTINCT moq.inventory_item_id,
+       moq.subinventory_code
+           AS subinventory_code,
+--       moq.locator_id
+--           AS locator_id,
+       moq.lot_number
+           AS lot_number,
+       msn.serial_number
+  FROM mtl_onhand_quantities_detail moq, mtl_serial_numbers msn
+ WHERE         
+           moq.inventory_item_id IN
+               (SELECT DISTINCT msi.INVENTORY_ITEM_ID
+                 FROM mtl_system_items_b            msi,
+                      mtl_onhand_quantities_detail  mohd
+                WHERE     mohd.ORGANIZATION_ID = msi.ORGANIZATION_ID
+                      AND mohd.INVENTORY_ITEM_ID = msi.INVENTORY_ITEM_ID
+                      AND msi.DEFAULT_SERIAL_STATUS_ID IS NOT NULL)      
+       AND moq.ORGANIZATION_ID = msn.CURRENT_ORGANIZATION_ID(+)
+       AND moq.SUBINVENTORY_CODE = msn.CURRENT_SUBINVENTORY_CODE(+)
+       AND moq.INVENTORY_ITEM_ID = msn.INVENTORY_ITEM_ID(+)
+       AND moq.lot_number = msn.LOT_NUMBER(+)
+--     AND moq.organization_id    = :2
+     AND moq.subinventory_code = 'ScrapSub') WHERE serial_number is NULL)
+    LOOP
+        INSERT INTO INV.MTL_SERIAL_NUMBERS (INVENTORY_ITEM_ID,
+                                            SERIAL_NUMBER,
+                                            LAST_UPDATE_DATE,
+                                            LAST_UPDATED_BY,
+                                            CREATION_DATE,
+                                            CREATED_BY,
+                                            LAST_UPDATE_LOGIN,
+                                            REQUEST_ID,
+                                            INITIALIZATION_DATE,
+                                            COMPLETION_DATE,
+                                            CURRENT_STATUS,
+                                            LOT_NUMBER,
+                                            PARENT_ITEM_ID,
+                                            ORIGINAL_UNIT_VENDOR_ID,
+                                            LAST_TXN_SOURCE_TYPE_ID,
+                                            LAST_TRANSACTION_ID,
+                                            LAST_RECEIPT_ISSUE_TYPE,
+                                            LAST_TXN_SOURCE_ID,
+                                            CURRENT_SUBINVENTORY_CODE,
+                                            CURRENT_ORGANIZATION_ID,
+                                            GEN_OBJECT_ID,
+                                            STATUS_ID,
+                                            COST_GROUP_ID,
+                                            PREVIOUS_STATUS,
+                                            ORGANIZATION_TYPE,
+                                            OWNING_ORGANIZATION_ID,
+                                            OWNING_TP_TYPE,
+                                            PLANNING_ORGANIZATION_ID,
+                                            PLANNING_TP_TYPE)
+                 VALUES (r.inventory_item_id,
+                            (SELECT    'BL'
+                                    || (  (SELECT MAX (
+                                                      SUBSTR (serial_number,
+                                                              3))
+                                            FROM mtl_serial_numbers msn
+                                           WHERE serial_number LIKE 'BL%')
+                                        + 1)
+                              FROM DUAL),
+                            TO_DATE ('04/01/2022 12:00:00 PM',
+                                     'MM/DD/YYYY HH:MI:SS AM'),
+                            0,
+                            TO_DATE ('04/01/2022 12:00:00 AM',
+                                     'MM/DD/YYYY HH:MI:SS AM'),
+                            0,
+                            -1,
+                            -1,
+                            TO_DATE ('7/1/2022', 'MM/DD/YYYY'),
+                            TO_DATE ('8/5/2021', 'MM/DD/YYYY'),
+                            3,
+                            r.lot_number,
+                            0,
+                            0,
+                            7,
+                            47622066,
+                            2,
+                            1559354,
+                            r.subinventory_code,
+                            83,
+                            MTL_GEN_OBJECT_ID_S.NEXTVAL, --(SELECT MTL_GEN_OBJECT_ID_S.NEXTVAL FROM DUAL)
+                            1,
+                            1005,
+                            4,
+                            2,
+                            83,
+                            2,
+                            83,
+                            2);
+
+        DBMS_OUTPUT.put_line ('ISSUANCE_ID:' || r.inventory_item_id);
+        COMMIT;
+    END LOOP;
+END;
+                             
+
 SELECT DISTINCT
               CASE moq.ORGANIZATION_ID
            WHEN 82 THEN 'BMW: Организация ведения ТМЦ'
