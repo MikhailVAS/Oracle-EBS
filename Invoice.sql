@@ -539,3 +539,18 @@ BEGIN
         COMMIT;
     END LOOP;
 END;
+
+/* Проблема автосоздания ЭСЧФ по Аренде*/
+BEGIN
+    UPDATE XXTG.XXTG_EHSCHF_KSF
+       SET FILE_NAME = 'invoice-' || invoice_num || '.sgn.xml'
+     WHERE     1 = 1
+           AND INVOICE_STATUS = 'COMPLETED'
+           AND CREATION_DATE IS NOT NULL
+           AND LAST_UPDATE_DATE =
+               TO_DATE ('10.04.2023 16:56:17', 'dd.mm.yyyy hh24:mi:ss');
+
+    COMMIT;
+
+    XXTG_EHSCHF_AP_KSF_PKG.prepare_files;
+END;

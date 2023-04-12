@@ -337,6 +337,44 @@ UPDATE PO.po_distributions_all
    SET RATE_DATE = TO_DATE ('04.05.2021', 'dd.mm.yyyy'), RATE = 2.4265
  WHERE PO_DISTRIBUTION_ID = 1127013       
               
+/* Find incorect amount in PO by PR*/
+SELECT prha.segment1               PR,
+       prla.line_num               PR_LINE_NUM,
+       prla.QUANTITY               AS "PR QUANTITY",
+       prla.QUANTITY_DELIVERED     AS "PR QUANTITY_DELIVERED",
+       pha.segment1                po_no,
+       pha.CURRENCY_CODE           AS "PO Currenccy",
+       pda.QUANTITY_ORDERED        AS "QUANTITY_ORDERED in PO"
+  FROM po.po_requisition_headers_all  prha,
+       po.po_requisition_lines_all    prla,
+       po.po_req_distributions_all    prda,
+       po.po_distributions_all        pda,
+       po.po_headers_all              pha
+ WHERE     prha.requisition_header_id = prla.requisition_header_id
+       AND prla.requisition_line_id = prda.requisition_line_id
+       AND prda.distribution_id = pda.req_distribution_id(+)
+       AND pda.po_header_id = pha.po_header_id(+)
+       AND prha.segment1 = 128860                                        -- PR
+UNION
+SELECT prha.segment1               PR,
+       prla.line_num               PR_LINE_NUM,
+       prla.QUANTITY               AS "PR QUANTITY",
+       prla.QUANTITY_DELIVERED     AS "PR QUANTITY_DELIVERED",
+       pha.segment1                po_no,
+       pha.CURRENCY_CODE           AS "PO Currenccy",
+       pda.QUANTITY_ORDERED        AS "QUANTITY_ORDERED in PO"
+  FROM po.po_requisition_headers_all  prha,
+       po.po_requisition_lines_all    prla,
+       po.po_req_distributions_all    prda,
+       po.po_distributions_all        pda,
+       po.po_headers_all              pha
+ WHERE     prha.requisition_header_id = prla.requisition_header_id
+       AND prla.requisition_line_id = prda.requisition_line_id
+       AND prda.distribution_id = pda.req_distribution_id(+)
+       AND pda.po_header_id = pha.po_header_id(+)
+       AND prha.segment1 = 128860                                        -- PR
+
+
 /* PO*/
 SELECT *
   FROM APPS.po_distributions_all   PDA,
