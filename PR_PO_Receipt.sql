@@ -10,7 +10,7 @@ SELECT segment1, attribute21, DESCRIPTION
 UPDATE inv.mtl_system_items_b
    SET attribute21 = 'N'
  WHERE segment1 IN ('3400000329')
-
+Find incorect amount in PO
  UPDATE PO.po_headers_all
    SET CREATION_DATE =
            TO_DATE ('31.08.2023 12:13:56', 'dd.mm.yyyy hh24:mi:ss')
@@ -337,14 +337,23 @@ UPDATE PO.po_distributions_all
    SET RATE_DATE = TO_DATE ('04.05.2021', 'dd.mm.yyyy'), RATE = 2.4265
  WHERE PO_DISTRIBUTION_ID = 1127013       
               
-/* Find incorect amount in PO by PR*/
-SELECT prha.segment1               PR,
-       prla.line_num               PR_LINE_NUM,
-       prla.QUANTITY               AS "PR QUANTITY",
-       prla.QUANTITY_DELIVERED     AS "PR QUANTITY_DELIVERED",
-       pha.segment1                po_no,
-       pha.CURRENCY_CODE           AS "PO Currenccy",
-       pda.QUANTITY_ORDERED        AS "QUANTITY_ORDERED in PO"
+/* Find incorect amount in PO by PR with currency rate*/
+SELECT prha.segment1
+           PR,
+       prla.line_num
+           PR_LINE_NUM,
+       prla.QUANTITY
+           AS "PR QUANTITY",
+       ROUND(prla.QUANTITY_DELIVERED * NVL (pha.rate, 1),2)
+           AS "PR QUANTITY_DELIVERED",
+       pha.segment1
+           po_no,
+       pha.CURRENCY_CODE
+           AS "PO Currenccy",
+       pha.rate
+           AS "PO Rate",
+       pda.QUANTITY_ORDERED
+           AS "QUANTITY_ORDERED in PO"
   FROM po.po_requisition_headers_all  prha,
        po.po_requisition_lines_all    prla,
        po.po_req_distributions_all    prda,
@@ -356,13 +365,22 @@ SELECT prha.segment1               PR,
        AND pda.po_header_id = pha.po_header_id(+)
        AND prha.segment1 = 128860                                        -- PR
 UNION
-SELECT prha.segment1               PR,
-       prla.line_num               PR_LINE_NUM,
-       prla.QUANTITY               AS "PR QUANTITY",
-       prla.QUANTITY_DELIVERED     AS "PR QUANTITY_DELIVERED",
-       pha.segment1                po_no,
-       pha.CURRENCY_CODE           AS "PO Currenccy",
-       pda.QUANTITY_ORDERED        AS "QUANTITY_ORDERED in PO"
+SELECT prha.segment1
+           PR,
+       prla.line_num
+           PR_LINE_NUM,
+       prla.QUANTITY
+           AS "PR QUANTITY",
+       ROUND(prla.QUANTITY_DELIVERED * NVL (pha.rate, 1),2)
+           AS "PR QUANTITY_DELIVERED",
+       pha.segment1
+           po_no,
+       pha.CURRENCY_CODE
+           AS "PO Currenccy",
+       pha.rate
+           AS "PO Rate",
+       pda.QUANTITY_ORDERED
+           AS "QUANTITY_ORDERED in PO"
   FROM po.po_requisition_headers_all  prha,
        po.po_requisition_lines_all    prla,
        po.po_req_distributions_all    prda,
@@ -372,7 +390,7 @@ SELECT prha.segment1               PR,
        AND prla.requisition_line_id = prda.requisition_line_id
        AND prda.distribution_id = pda.req_distribution_id(+)
        AND pda.po_header_id = pha.po_header_id(+)
-       AND prha.segment1 = 128860                                        -- PR
+       AND prha.segment1 = 128860    
 
 
 /* PO*/
@@ -1528,4 +1546,216 @@ UPDATE po_lines_all
             WHERE     --NVL (poh.closed_code, 'OPEN') = 'OPEN' AND
                    poh.segment1 IN ('24739'))
    AND CLOSED_CODE != 'CLOSED';
+
+/*================== Split line PR by PO Service Desk  Mihail.Vasiljev ======================*/
+DECLARE
+    l_po_line_amount   NUMBER;
+    l_req_line_id_s    NUMBER;
+BEGIN
+    FOR line_rec
+        IN (SELECT DISTINCT rl.requisition_line_id, rl.QUANTITY
+             FROM po_distributions_all      pod,
+                  PO_REQ_DISTRIBUTIONS_ALL  reqd,
+                  Po_Requisition_Lines_All  rl
+            WHERE     po_header_id = (SELECT po_header_id
+                                        FROM po_headers_all
+                                       WHERE segment1 = '51854')
+                  AND reqd.distribution_id = pod.req_distribution_id
+                  AND rl.requisition_line_id = reqd.requisition_line_id)
+    LOOP
+        SELECT SUM (quantity * poh.rate)     po_sum_amount
+          INTO l_po_line_amount
+          FROM po_headers_all poh, po_lines_all pol, po_distributions_all pod
+         WHERE     pod.req_distribution_id IN
+                       (SELECT distribution_id
+                         FROM PO_REQ_DISTRIBUTIONS_ALL
+                        WHERE requisition_line_id =
+                              line_rec.REQUISITION_LINE_ID)
+               AND pol.po_line_id = pod.po_line_id
+               AND poh.po_header_id = pod.po_header_id
+               AND NVL (pol.cancel_flag, 'N') != 'Y';
+
+        IF (line_rec.quantity > l_po_line_amount)
+        THEN
+            UPDATE Po_Requisition_Lines_All
+               SET QUANTITY = ROUND (l_po_line_amount, 2)
+             WHERE REQUISITION_LINE_ID = line_rec.REQUISITION_LINE_ID;
+
+            SELECT PO_REQUISITION_LINES_S.NEXTVAL
+              INTO l_req_line_id_s
+              FROM DUAL;
+
+            INSERT INTO PO_REQUISITION_LINES_ALL (
+                            REQUISITION_LINE_ID,
+                            REQUISITION_HEADER_ID,
+                            LINE_NUM,
+                            LINE_TYPE_ID,
+                            CATEGORY_ID,
+                            ITEM_DESCRIPTION,
+                            UNIT_MEAS_LOOKUP_CODE,
+                            UNIT_PRICE,
+                            QUANTITY,
+                            DELIVER_TO_LOCATION_ID,
+                            TO_PERSON_ID,
+                            LAST_UPDATE_DATE,
+                            LAST_UPDATED_BY,
+                            SOURCE_TYPE_CODE,
+                            LAST_UPDATE_LOGIN,
+                            CREATION_DATE,
+                            CREATED_BY,
+                            ITEM_ID,
+                            SUGGESTED_BUYER_ID,
+                            ENCUMBERED_FLAG,
+                            RFQ_REQUIRED_FLAG,
+                            NEED_BY_DATE,
+                            LINE_LOCATION_ID,
+                            DOCUMENT_TYPE_CODE,
+                            BLANKET_PO_HEADER_ID,
+                            BLANKET_PO_LINE_NUM,
+                            CURRENCY_CODE,
+                            RATE_TYPE,
+                            RATE_DATE,
+                            RATE,
+                            CURRENCY_UNIT_PRICE,
+                            SUGGESTED_VENDOR_NAME,
+                            SUGGESTED_VENDOR_LOCATION,
+                            URGENT_FLAG,
+                            DESTINATION_TYPE_CODE,
+                            DESTINATION_ORGANIZATION_ID,
+                            VENDOR_ID,
+                            VENDOR_SITE_ID,
+                            DESTINATION_CONTEXT,
+                            ORG_ID,
+                            CATALOG_TYPE,
+                            CATALOG_SOURCE,
+                            REQUESTER_EMAIL,
+                            PCARD_FLAG,
+                            NEW_SUPPLIER_FLAG,
+                            ORDER_TYPE_LOOKUP_CODE,
+                            PURCHASE_BASIS,
+                            MATCHING_BASIS,
+                            NEGOTIATED_BY_PREPARER_FLAG,
+                            BASE_UNIT_PRICE,
+                            TAX_ATTRIBUTE_UPDATE_CODE,
+                            UNSPSC_CODE,
+                            REQS_IN_POOL_FLAG,
+                            ATTRIBUTE9,
+                            ATTRIBUTE10)
+                SELECT l_req_line_id_s                 /*requisition_line_id*/
+                                      ,
+                       requisition_header_id         /*requisition_header_id*/
+                                            ,
+                       l_req_line_id_s                            /*line_num*/
+                                      ,
+                       line_type_id                           /*line_type_id*/
+                                   ,
+                       CATEGORY_ID                             /*category_id*/
+                                  ,
+                       item_description --replace(item_description, ' ' || to_char(l_line_NEED_BY_DATE, 'MM-YYYY'), '')  || ' ' || to_char(ADD_MONTHS(l_line_NEED_BY_DATE, l_counter), 'MM-YYYY')               /*item_description*/
+                                       ,
+                       unit_meas_lookup_code         /*unit_meas_lookup_code*/
+                                            ,
+                       UNIT_PRICE,
+                       line_rec.quantity - l_po_line_amount,
+                       DELIVER_TO_LOCATION_ID,
+                       TO_PERSON_ID,
+                       LAST_UPDATE_DATE,
+                       LAST_UPDATED_BY,
+                       SOURCE_TYPE_CODE,
+                       LAST_UPDATE_LOGIN,
+                       CREATION_DATE,
+                       CREATED_BY,
+                       ITEM_ID,
+                       SUGGESTED_BUYER_ID,
+                       ENCUMBERED_FLAG,
+                       RFQ_REQUIRED_FLAG,
+                       NEED_BY_DATE,
+                       NULL,
+                       DOCUMENT_TYPE_CODE,
+                       BLANKET_PO_HEADER_ID,
+                       BLANKET_PO_LINE_NUM,
+                       CURRENCY_CODE,
+                       RATE_TYPE,
+                       RATE_DATE,
+                       RATE,
+                       CURRENCY_UNIT_PRICE,
+                       SUGGESTED_VENDOR_NAME,
+                       SUGGESTED_VENDOR_LOCATION,
+                       URGENT_FLAG,
+                       DESTINATION_TYPE_CODE,
+                       DESTINATION_ORGANIZATION_ID,
+                       VENDOR_ID,
+                       VENDOR_SITE_ID,
+                       DESTINATION_CONTEXT,
+                       ORG_ID,
+                       CATALOG_TYPE,
+                       CATALOG_SOURCE,
+                       REQUESTER_EMAIL,
+                       PCARD_FLAG,
+                       NEW_SUPPLIER_FLAG,
+                       ORDER_TYPE_LOOKUP_CODE,
+                       PURCHASE_BASIS,
+                       MATCHING_BASIS,
+                       NEGOTIATED_BY_PREPARER_FLAG,
+                       BASE_UNIT_PRICE,
+                       TAX_ATTRIBUTE_UPDATE_CODE,
+                       UNSPSC_CODE,
+                       'Y'                                 --REQS_IN_POOL_FLAG
+                          ,
+                       ATTRIBUTE9,
+                       ATTRIBUTE10
+                  FROM Po_Requisition_Lines_All l
+                 WHERE REQUISITION_LINE_ID = line_rec.REQUISITION_LINE_ID;
+
+            INSERT INTO PO_REQ_DISTRIBUTIONS_ALL (DISTRIBUTION_ID,
+                                                  LAST_UPDATE_DATE,
+                                                  LAST_UPDATED_BY,
+                                                  REQUISITION_LINE_ID,
+                                                  SET_OF_BOOKS_ID,
+                                                  CODE_COMBINATION_ID,
+                                                  REQ_LINE_QUANTITY,
+                                                  LAST_UPDATE_LOGIN,
+                                                  CREATION_DATE,
+                                                  CREATED_BY,
+                                                  ENCUMBERED_FLAG,
+                                                  ACCRUAL_ACCOUNT_ID,
+                                                  VARIANCE_ACCOUNT_ID,
+                                                  PREVENT_ENCUMBRANCE_FLAG,
+                                                  DISTRIBUTION_NUM,
+                                                  ALLOCATION_TYPE,
+                                                  ALLOCATION_VALUE,
+                                                  PROJECT_RELATED_FLAG,
+                                                  ORG_ID,
+                                                  TAX_RECOVERY_OVERRIDE_FLAG,
+                                                  ATTRIBUTE14)
+                SELECT PO_REQ_DISTRIBUTIONS_S.NEXTVAL,
+                       LAST_UPDATE_DATE,
+                       LAST_UPDATED_BY,
+                       l_req_line_id_s,
+                       SET_OF_BOOKS_ID,
+                       CODE_COMBINATION_ID,
+                       line_rec.quantity - l_po_line_amount,
+                       LAST_UPDATE_LOGIN,
+                       CREATION_DATE,
+                       CREATED_BY,
+                       ENCUMBERED_FLAG,
+                       ACCRUAL_ACCOUNT_ID,
+                       VARIANCE_ACCOUNT_ID,
+                       PREVENT_ENCUMBRANCE_FLAG,
+                       DISTRIBUTION_NUM,
+                       ALLOCATION_TYPE,
+                       ALLOCATION_VALUE,
+                       PROJECT_RELATED_FLAG,
+                       ORG_ID,
+                       TAX_RECOVERY_OVERRIDE_FLAG,
+                       ATTRIBUTE14
+                  FROM PO_REQ_DISTRIBUTIONS_ALL
+                 WHERE     REQUISITION_LINE_ID = line_rec.REQUISITION_LINE_ID
+                       AND ROWNUM = 1;
+        END IF;
+    END LOOP;
+
+    COMMIT;
+END;
    
+/*====================================================================================*/
