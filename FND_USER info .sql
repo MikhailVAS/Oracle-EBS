@@ -106,3 +106,52 @@ SELECT fu.user_name                "User Name",
 --    and fuser.user_name like 'SYS%'
 ORDER BY fuser.USER_NAME
 
+
+ /*All  for SOX Matrix */
+SELECT DISTINCT
+         per.EMPLOYEE_NUMBER
+             EMPLOYEE_NUMBER,
+         fuser.USER_NAME
+             USER_NAME,
+--         per.FULL_NAME
+--             FULL_NAME,
+         --         fuser.user_id,
+         --         fuser.creation_date,
+         --         fuser.last_update_date,
+         fuser.LAST_LOGON_DATE,
+         fuser.START_DATE,
+         fuser.END_DATE,
+         --         fuser.END_DATE,
+         frt.RESPONSIBILITY_NAME
+             RESPONSIBILITY,
+         (SELECT RT.RESPONSIBILITY_NAME
+            FROM FND_RESPONSIBILITY_TL RT
+           WHERE     RT.LANGUAGE = 'RU'
+                 AND frt.RESPONSIBILITY_ID = RT.RESPONSIBILITY_ID --AND RT.SOURCE_LANG = 'RU'
+                                                                 )
+             "RU RESPONSIBILITY",
+         TO_CHAR (furg.START_DATE, 'DD-MM-YYYY')
+             resp_attched_date,
+         furg.end_date
+             resp_revoke_date,
+         furg.Description
+             description_revoke
+    --    , TO_CHAR(furg.END_DATE,'DD-MM-YYYY') resp_remove_date
+    FROM FND_USER                   fuser,
+         PER_PEOPLE_F               per,
+         fnd_user_resp_groups_direct furg,
+         FND_RESPONSIBILITY_TL      frt,
+         applsys.fnd_responsibility fr,
+         applsys.fnd_application_tl fat,
+         applsys.fnd_application    fa
+   WHERE     fuser.EMPLOYEE_ID = per.PERSON_ID
+         AND fuser.USER_ID = furg.USER_ID
+--         AND (TO_CHAR (fuser.END_DATE) IS NULL OR fuser.END_DATE > SYSDATE)
+         AND frt.RESPONSIBILITY_ID = furg.RESPONSIBILITY_ID
+         AND fr.responsibility_id = frt.responsibility_id
+         AND fa.application_id = fat.application_id
+         AND fr.application_id = fat.application_id
+         AND frt.LANGUAGE = 'US'
+         --         AND furg.END_DATE IS NULL
+--         AND fuser.user_name LIKE '%IRINA.KIZHNEROVA%'
+ORDER BY fuser.USER_NAME

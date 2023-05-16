@@ -19,62 +19,65 @@ DELETE FROM ap.AP_SELECTED_INVOICES_ALL
 
 --################# Payment Batch error with inorrect bank Acount ###################
 
-/* Formatted on (QP5 v5.388) Service Desk 672937 Mihail.Vasiljev */
+/* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
 UPDATE ap.AP_PAYMENT_SCHEDULES_ALL
    SET EXTERNAL_BANK_ACCOUNT_ID =
            (SELECT EXT_BANK_ACCOUNT_ID
               FROM iby_ext_bank_accounts
-             WHERE BANK_ACCOUNT_NUM = 'TR460006400000212990420421')
+             WHERE BANK_ACCOUNT_NUM = 'TR640014300000000013498988')
 --SELECT * FROM ap.AP_PAYMENT_SCHEDULES_ALL
- WHERE invoice_id IN (1132374, 1145300, 1153737)
+ WHERE invoice_id IN (1151154, 1159025, 1167957)
  
-/* Formatted on (QP5 v5.388) Service Desk 672937 Mihail.Vasiljev */
+/* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
 UPDATE ap.AP_SELECTED_INVOICES_ALL
    SET EXTERNAL_BANK_ACCOUNT_ID =
            (SELECT EXT_BANK_ACCOUNT_ID
               FROM iby_ext_bank_accounts
-             WHERE BANK_ACCOUNT_NUM = 'TR460006400000212990420421')
+             WHERE BANK_ACCOUNT_NUM = 'TR640014300000000013498988')
 --SELECT * FROM ap.AP_SELECTED_INVOICES_ALL
- WHERE invoice_id IN (1132374, 1145300, 1153737)
+ WHERE invoice_id IN (1151154, 1159025, 1167957)
 
-/* Formatted on (QP5 v5.388) Service Desk 672937 Mihail.Vasiljev */
+/* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
 UPDATE ap.ap_invoices_all
    SET EXTERNAL_BANK_ACCOUNT_ID =
            (SELECT EXT_BANK_ACCOUNT_ID
               FROM iby_ext_bank_accounts
-             WHERE BANK_ACCOUNT_NUM = 'TR460006400000212990420421')
-             SELECT * FROM ap.ap_invoices_all
- WHERE invoice_id IN (1132374, 1145300, 1153737)
+             WHERE BANK_ACCOUNT_NUM = 'TR640014300000000013498988')
+--             SELECT * FROM ap.ap_invoices_all
+ WHERE invoice_id IN (1151154, 1159025, 1167957)
 
-/* Formatted on (QP5 v5.388) Service Desk 672937 Mihail.Vasiljev */
+/* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
 UPDATE IBY_DOCS_PAYABLE_ALL
    SET EXTERNAL_BANK_ACCOUNT_ID =
            (SELECT EXT_BANK_ACCOUNT_ID
               FROM iby_ext_bank_accounts
-             WHERE BANK_ACCOUNT_NUM = 'TR460006400000212990420421')           
-             SELECT * FROM IBY_DOCS_PAYABLE_ALL
- WHERE CALLING_APP_DOC_UNIQUE_REF2 IN (1132374, 1145300, 1153737)
+             WHERE BANK_ACCOUNT_NUM = 'TR640014300000000013498988')           
+-- SELECT * FROM IBY_DOCS_PAYABLE_ALL
+ WHERE CALLING_APP_DOC_UNIQUE_REF2 IN (1151154, 1159025, 1167957)
  
 -- EXT_BANK_ACCOUNT_ID     BRANCH_ID   BANK_ACCOUNT_NUM
---40235                   819693      TR460006400000212990420421   -- Good
+--40235                   819693      TR640014300000000013498988   -- Good
 --28045                   51398       TR740006400000212990420402   -- Bed
 
-/* Formatted on (QP5 v5.388) Service Desk 672937 Mihail.Vasiljev */
+/* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
 UPDATE iby_payments_all
    SET EXTERNAL_BANK_ACCOUNT_ID =
            (SELECT EXT_BANK_ACCOUNT_ID
               FROM iby_ext_bank_accounts
-             WHERE BANK_ACCOUNT_NUM = 'TR460006400000212990420421'),
-       EXT_BANK_ACCOUNT_NUMBER =
-           (SELECT EXT_BANK_ACCOUNT_ID
-              FROM iby_ext_bank_accounts
-             WHERE BANK_ACCOUNT_NUM = 'TR460006400000212990420421'),
-       EXT_EFT_SWIFT_CODE = 'ISBKTRISXXX',
+             WHERE BANK_ACCOUNT_NUM = 'TR640014300000000013498988'),
+       EXT_BANK_ACCOUNT_NUMBER = 'TR640014300000000013498988',
+       EXT_BANK_ACCOUNT_IBAN_NUMBER = 'TR640014300000000013498988', --       EXT_BANK_ACCOUNT_NUMBER =
+       --           (SELECT EXT_BANK_ACCOUNT_ID
+       --              FROM iby_ext_bank_accounts
+       --             WHERE BANK_ACCOUNT_NUM = 'TR640014300000000013498988'),
        EXT_BANK_BRANCH_NAME = 'ISTANBUL. TURKEY',
-       EXT_BANK_BRANCH_PARTY_ID = '819693',
-       EXT_BANK_ACCOUNT_NUM_ELEC = 'TR460006400000212990420421'
- WHERE     PAYMENT_DATE = TO_DATE ('18.04.2023', 'dd.mm.yyyy')
-       AND PAYMENT_ID = 805437
+       EXT_BANK_ACCOUNT_NAME = 'AKTIF YATIRIM BANKASI A.S.',
+       EXT_BANK_NAME = 'AKTIF YATIRIM BANKASI A.S.',
+       EXT_EFT_SWIFT_CODE = 'CAYTTRISXXX',
+       EXT_BANK_BRANCH_PARTY_ID = '831050',
+       EXT_BANK_ACCOUNT_NUM_ELEC = 'TR640014300000000013498988'
+ WHERE     PAYMENT_DATE = TO_DATE ('26.04.2023', 'dd.mm.yyyy')
+       AND PAYMENT_ID = 806071
 
  --##############################################################################
 
