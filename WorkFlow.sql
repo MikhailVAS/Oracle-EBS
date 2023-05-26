@@ -112,3 +112,13 @@ UPDATE WF_NOTIFICATIONS
                        --                          AND WUR.user_orig_system = :3
                        AND WUR.user_orig_system_id = '13432')
        AND STATUS = 'OPEN'
+
+/* Delete WorkFlow notification (QP5 v5.388) Service Desk  Mihail.Vasiljev */
+DELETE FROM WF_NOTIFICATIONS WN
+      --select * FROM   WF_NOTIFICATIONS WN
+      WHERE     WN.STATUS = 'OPEN'
+            AND WN.recipient_role IN (SELECT WUR.role_name
+                                        FROM WF_USER_ROLES WUR
+                                       WHERE WUR.user_name = 'SYSADMIN')
+            AND BEGIN_DATE < TO_DATE ('01.04.2023', 'dd.mm.yyyy')
+            AND more_info_role IS NULL;
