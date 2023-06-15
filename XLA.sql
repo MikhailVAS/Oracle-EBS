@@ -264,3 +264,61 @@ where ENTITY_ID in (select ENTITY_ID from xla.xla_transaction_entities where ent
         where INVENTORY_ITEM_ID = 412695 and TRANSACTION_TYPE_ID in (100, 664) and SUBINVENTORY_CODE = 'ТПО'
         and transaction_date > trunc(sysdate, 'MM'))
     )) and ac1 = 'ТПО_84'; 
+
+
+/* Change date in xla_ae_lines*/
+UPDATE xla.xla_ae_lines
+   SET ACCOUNTING_DATE = TO_DATE ('23052023', 'ddmmyyyy')
+ WHERE ae_header_id IN
+           (SELECT ae_header_id
+             FROM xla.xla_ae_headers a
+            WHERE     1 = 1
+                  AND entity_id IN
+                          (SELECT ENTITY_ID
+                            FROM xla.xla_transaction_entities
+                           WHERE transaction_number IN
+                                     (SELECT TO_CHAR (transaction_id)
+                                       FROM inv.mtl_material_transactions mt
+                                      WHERE transaction_set_id IN (49477450,
+                                                                   49477374,
+                                                                   49477362,
+                                                                   49477461,
+                                                                   49560697))))
+
+
+
+/* Change date in xla_ae_headers */
+UPDATE xla_ae_headers a
+   SET ACCOUNTING_DATE = TO_DATE ('23052023', 'ddmmyyyy'),
+--       GL_TRANSFER_STATUS_CODE = 'N',
+--       GL_TRANSFER_DATE = NULL,
+       PERIOD_NAME = 'MAY-23'
+ WHERE entity_id IN
+           (SELECT ENTITY_ID
+             FROM xla.xla_transaction_entities
+            WHERE transaction_number IN
+                      (SELECT TO_CHAR (transaction_id)
+                         FROM inv.mtl_material_transactions mt
+                        WHERE transaction_set_id IN (49477450,
+                                                     49477374,
+                                                     49477362,
+                                                     49477461,
+                                                     49560697)));
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      -- Service Desk 678948
+/* Change date in xla_events */
+UPDATE xla.xla_events a
+   SET event_date = TO_DATE ('23052023', 'ddmmyyyy'),
+       reference_date_1 = TO_DATE ('23052023', 'ddmmyyyy'),
+       transaction_date = TO_DATE ('23052023', 'ddmmyyyy')
+ WHERE entity_id IN
+           (SELECT ENTITY_ID
+             FROM xla.xla_transaction_entities
+            WHERE transaction_number IN
+                      (SELECT TO_CHAR (transaction_id)
+                         FROM inv.mtl_material_transactions mt
+                        WHERE transaction_set_id IN (49477450,
+                                                     49477374,
+                                                     49477362,
+                                                     49477461,
+                                                     49560697)));

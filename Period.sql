@@ -1,6 +1,7 @@
 /* Inventory Period*/
 -- If Period Status is 'Y' and Closed Date is not NULL then the closing of the INV period failed.
-  SELECT ood.organization_id
+  SELECT oap. ACCT_PERIOD_ID, 
+         ood.organization_id
              "Organization ID",
          ood.organization_code
              "Organization Code",

@@ -36,3 +36,11 @@ SELECT                                                              --distinct
                    (SELECT CUSTOMER_TRX_ID
                       FROM RA_CUSTOMER_TRX_ALL
                      WHERE TRX_NUMBER IN ('112235', '112212', '112234'))) -- Ar Doc number
+
+
+/* When AR transaction not selected block Bill To 
+   Назаревич
+ */
+UPDATE HZ_CUST_ACCT_SITES_ALL
+   SET bill_to_flag = 'P'
+ WHERE CUST_ACCOUNT_ID = 908693 AND ORIG_SYSTEM_REFERENCE = 'AR-109-3:330832'
