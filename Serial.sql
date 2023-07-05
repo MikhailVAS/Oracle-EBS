@@ -398,6 +398,7 @@ UPDATE APPS.MTL_SERIAL_NUMBERS
    SET CURRENT_SUBINVENTORY_CODE = 'DefShpSub',
        CURRENT_LOCATOR_ID = '338',
        group_mark_id = NULL,
+       
        line_mark_id = NULL,
        lot_line_mark_id = NULL,
        RESERVATION_ID = NULL

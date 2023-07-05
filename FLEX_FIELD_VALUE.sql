@@ -125,3 +125,113 @@ UPDATE APPS.FND_FLEX_VALUES
  AND    flv.LANGUAGE(+) = USERENV ('LANG')
 
  ORDER BY par.column_seq_num
+
+"Insert into APPS.FND_FLEX_VALUES
+   (FLEX_VALUE_SET_ID, FLEX_VALUE_ID, FLEX_VALUE, LAST_UPDATE_DATE, LAST_UPDATED_BY, 
+    CREATION_DATE, CREATED_BY, LAST_UPDATE_LOGIN, ENABLED_FLAG, SUMMARY_FLAG, 
+    PARENT_FLEX_VALUE_LOW, VALUE_CATEGORY, ATTRIBUTE1 "	", ATTRIBUTE2)
+ Values
+   (1016137, (FND_FLEX_VALUES_S.nextval) , '740_08_02_01_00_00', TO_DATE('6/30/2023 11:23:11 AM', 'MM/DD/YYYY HH:MI:SS AM'), 7256, 
+    TO_DATE('6/30/2023 11:22:36 AM', 'MM/DD/YYYY HH:MI:SS AM'), "	" 7256, 29669656, 'Y', 'N', 
+    'Серверное оборудование', 'XXTG_CASH_FLOW_BUDGET_ITEM', '740_08_02_01_00_00', '20');
+    
+  COMMIT;  
+  "
+
+INSERT INTO APPS.FND_FLEX_VALUES_TL (FLEX_VALUE_ID,
+                                     LANGUAGE,
+                                     LAST_UPDATE_DATE,
+                                     LAST_UPDATED_BY,
+                                     CREATION_DATE,
+                                     CREATED_BY,
+                                     LAST_UPDATE_LOGIN,
+                                     DESCRIPTION,
+                                     SOURCE_LANG,
+                                     FLEX_VALUE_MEANING)
+    SELECT FLEX_VALUE_ID,
+           'US',
+           LAST_UPDATE_DATE,
+           CREATED_BY,
+           CREATION_DATE,
+           CREATED_BY,
+           LAST_UPDATE_LOGIN,
+           (SELECT t.DESCRIPTION || ' (' || T.FLEX_VALUE_MEANING || ')'
+             FROM FND_FLEX_VALUES_TL T
+            WHERE     t.FLEX_VALUE_ID =
+                      (SELECT MIN (T2.FLEX_VALUE_ID)
+                        FROM FND_FLEX_VALUES_TL T2
+                       WHERE     T2.FLEX_VALUE_MEANING = b.FLEX_VALUE
+                             AND t2.LANGUAGE = 'US')
+                  AND t.LANGUAGE = 'US'),
+           'US',
+           b.FLEX_VALUE
+      FROM FND_FLEX_VALUES B
+     WHERE     FLEX_VALUE_SET_ID = 1016137
+           AND NOT EXISTS
+                   (SELECT 1
+                      FROM FND_FLEX_VALUES_TL t3
+                     WHERE     t3.FLEX_VALUE_ID = b.FLEX_VALUE_ID
+                           AND t3.LANGUAGE = 'US');
+
+INSERT INTO APPS.FND_FLEX_VALUES_TL (FLEX_VALUE_ID,
+                                     LANGUAGE,
+                                     LAST_UPDATE_DATE,
+                                     LAST_UPDATED_BY,
+                                     CREATION_DATE,
+                                     CREATED_BY,
+                                     LAST_UPDATE_LOGIN,
+                                     DESCRIPTION,
+                                     SOURCE_LANG,
+                                     FLEX_VALUE_MEANING)
+    SELECT FLEX_VALUE_ID,
+           'RU',
+           LAST_UPDATE_DATE,
+           CREATED_BY,
+           CREATION_DATE,
+           CREATED_BY,
+           LAST_UPDATE_LOGIN,
+           (SELECT t.DESCRIPTION || ' (' || T.FLEX_VALUE_MEANING || ')'
+             FROM FND_FLEX_VALUES_TL T
+            WHERE     t.FLEX_VALUE_ID =
+                      (SELECT MIN (T2.FLEX_VALUE_ID)
+                        FROM FND_FLEX_VALUES_TL T2
+                       WHERE     T2.FLEX_VALUE_MEANING = b.FLEX_VALUE
+                             AND t2.LANGUAGE = 'RU')
+                  AND t.LANGUAGE = 'RU'),
+           'RU',
+           b.FLEX_VALUE
+      FROM FND_FLEX_VALUES B
+     WHERE     FLEX_VALUE_SET_ID = 1016137
+           AND NOT EXISTS
+                   (SELECT 1
+                      FROM FND_FLEX_VALUES_TL t3
+                     WHERE     t3.FLEX_VALUE_ID = b.FLEX_VALUE_ID
+                           AND t3.LANGUAGE = 'RU');
+
+ Insert into APPS.FND_FLEX_VALUES_TL
+(FLEX_VALUE_ID, LANGUAGE, LAST_UPDATE_DATE, LAST_UPDATED_BY, CREATION_DATE, CREATED_BY, LAST_UPDATE_LOGIN, DESCRIPTION, SOURCE_LANG, FLEX_VALUE_MEANING)
+SELECT FLEX_VALUE_ID, 'US', LAST_UPDATE_DATE, CREATED_BY, CREATION_DATE, CREATED_BY, LAST_UPDATE_LOGIN, 
+(SELECT t.DESCRIPTION ||' ('|| T.FLEX_VALUE_MEANING||')'   
+    FROM FND_FLEX_VALUES_TL T
+    WHERE t.FLEX_VALUE_ID = (SELECT min(T2.FLEX_VALUE_ID)
+                            FROM FND_FLEX_VALUES_TL T2
+                            WHERE T2.FLEX_VALUE_MEANING  = b.FLEX_VALUE
+                              AND t2.LANGUAGE = 'US')
+      AND t.LANGUAGE = 'US'), 'US', b.FLEX_VALUE
+  FROM FND_FLEX_VALUES B
+WHERE  FLEX_VALUE_SET_ID = 1016137
+and not exists (select 1 from FND_FLEX_VALUES_TL t3 where t3.FLEX_VALUE_ID = b.FLEX_VALUE_ID AND t3.LANGUAGE = 'US');
+    
+Insert into APPS.FND_FLEX_VALUES_TL
+(FLEX_VALUE_ID, LANGUAGE, LAST_UPDATE_DATE, LAST_UPDATED_BY, CREATION_DATE, CREATED_BY, LAST_UPDATE_LOGIN, DESCRIPTION, SOURCE_LANG, FLEX_VALUE_MEANING)
+SELECT FLEX_VALUE_ID, 'RU', LAST_UPDATE_DATE, CREATED_BY, CREATION_DATE, CREATED_BY, LAST_UPDATE_LOGIN, 
+(SELECT t.DESCRIPTION ||' ('|| T.FLEX_VALUE_MEANING||')'   
+    FROM FND_FLEX_VALUES_TL T
+    WHERE t.FLEX_VALUE_ID = (SELECT min(T2.FLEX_VALUE_ID)
+                            FROM FND_FLEX_VALUES_TL T2
+                            WHERE T2.FLEX_VALUE_MEANING  = b.FLEX_VALUE
+                              AND t2.LANGUAGE = 'RU')
+      AND t.LANGUAGE = 'RU'), 'RU', b.FLEX_VALUE
+  FROM FND_FLEX_VALUES B
+WHERE  FLEX_VALUE_SET_ID = 1016137
+and not exists (select 1 from FND_FLEX_VALUES_TL t3 where t3.FLEX_VALUE_ID = b.FLEX_VALUE_ID AND t3.LANGUAGE = 'RU');
