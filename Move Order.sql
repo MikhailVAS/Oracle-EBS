@@ -201,3 +201,19 @@ UPDATE MTL_TXN_REQUEST_LINES MTRL
                          FROM WSH_DELIVERY_DETAILS
                         WHERE SOURCE_HEADER_NUMBER = '280765') -- Move Order 280765 Internal.ORDER ENTRY
        AND MTRL.QUANTITY = '0'
+
+       SELECT l.line_id,
+       dd.delivery_detail_id,
+       dd.SOURCE_HEADER_NUMBER,
+       dd.TRACKING_NUMBER,
+       h.move_order_type
+  FROM wsh.wsh_delivery_details  dd,
+       MTL_TXN_REQUEST_LINES     l,
+       MTL_TXN_REQUEST_HEADERS   h
+ WHERE     1 = 1                           --dd.delivery_detail_id IN (743742)
+       AND l.line_status = '5'
+       AND dd.RELEASED_STATUS = 'S'
+       AND l.TRANSACTION_HEADER_ID IS NULL
+       AND l.line_id = dd.move_order_line_id
+       AND h.header_id = l.header_id
+       AND l.CREATION_DATE >= SYSDATE - 160

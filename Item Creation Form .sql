@@ -1,4 +1,11 @@
-﻿/* Item Creation from ORG Assigment */
+﻿XXTG_ITEM_CREATION_HDR
+
+/* Item Creation Web Form */
+SELECT HDR.*
+  FROM XXTG_ITEM_CREATION_HDR HDR, XXTG_ITEM_CREATION_ATTR_VAL ATR
+ WHERE HDR.HEADER_ID = ATR.HEADER_ID AND DESCRIPTION_EN LIKE '%Kasper%'
+
+/* Item Creation from ORG Assigment */
 DECLARE
     p_item_id            NUMBER := 1033848;
     P_PRIMARY_UOM_CODE   VARCHAR2 (100) := 'Each';
@@ -68,3 +75,5 @@ inv_item_events_pvt.invoke_icx_apis( p_entity_type       => 'ITEM',
                                   );
 
 end;
+
+

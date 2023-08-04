@@ -235,3 +235,33 @@ SELECT FLEX_VALUE_ID, 'RU', LAST_UPDATE_DATE, CREATED_BY, CREATION_DATE, CREATED
   FROM FND_FLEX_VALUES B
 WHERE  FLEX_VALUE_SET_ID = 1016137
 and not exists (select 1 from FND_FLEX_VALUES_TL t3 where t3.FLEX_VALUE_ID = b.FLEX_VALUE_ID AND t3.LANGUAGE = 'RU');
+
+
+SELECT                                                              
+       ffvs.flex_value_set_name,
+       ffv.PARENT_FLEX_VALUE_LOW,
+       ffv.flex_value,
+       ffv.CREATION_DATE,
+       (SELECT DESCRIPTION
+         FROM fnd_flex_values_tl ffvt
+        WHERE ffv.flex_value_id = ffvt.flex_value_id AND ffvt.language = 'RU')
+           "VALUE_DESCRIPTION RU",
+       (SELECT DESCRIPTION
+         FROM fnd_flex_values_tl ffvt2
+        WHERE     ffv.flex_value_id = ffvt2.flex_value_id
+              AND ffvt2.language = 'US')
+           "VALUE_DESCRIPTION US",
+       ffv.ATTRIBUTE1
+           "LINK_BUDGET_CODE",
+       ffv.ATTRIBUTE2
+           "Cash flow budget Type"
+  FROM fnd_flex_value_sets ffvs, fnd_flex_values ffv
+ WHERE     ffvs.flex_value_set_id = ffv.flex_value_set_id
+       AND ffvs.flex_value_set_id =
+           (SELECT DISTINCT FLEX_VALUE_SET_ID
+             FROM applsys.fnd_flex_value_sets fvs
+            WHERE fvs.flex_value_set_name =
+                  NVL (UPPER ('XXTG_CASH_FLOW_BUDGET_ITEM'), -- for example XXTG_INT_REQ_REASONS
+                       flex_value_set_name))
+       AND ffv.ATTRIBUTE1 IS NOT NULL
+       AND ffv.END_DATE_ACTIVE IS NULL;

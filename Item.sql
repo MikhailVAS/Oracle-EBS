@@ -211,6 +211,37 @@ UPDATE APPS.MTL_SYSTEM_ITEMS_TL MSIT
                                                       '1013520284',
                                                       '1013520285',
                                                       '1013520286'))
+/* Item , Status, Balance by Organization*/
+SELECT a.SEGMENT1,
+       a.DESCRIPTION,
+       (SELECT PIS.STATUS_CODE
+          FROM MTL_PENDING_ITEM_STATUS PIS
+         WHERE     PIS.INVENTORY_ITEM_ID = a.INVENTORY_ITEM_ID
+               AND PIS.ORGANIZATION_ID = a.ORGANIZATION_ID
+               AND PIS.IMPLEMENTED_DATE =
+                   (SELECT MAX (MIS.IMPLEMENTED_DATE)
+                     FROM MTL_PENDING_ITEM_STATUS MIS
+                    WHERE     MIS.INVENTORY_ITEM_ID = a.INVENTORY_ITEM_ID --'553743'
+                          AND MIS.ORGANIZATION_ID = a.ORGANIZATION_ID))
+           AS STATUS,
+       (SELECT NVL2 (COUNT (QD.PRIMARY_TRANSACTION_QUANTITY), 'Yes', 'No')
+         FROM MTL_ONHAND_QUANTITIES_DETAIL QD
+        WHERE     QD.INVENTORY_ITEM_ID = a.INVENTORY_ITEM_ID
+              AND QD.ORGANIZATION_ID = a.ORGANIZATION_ID)
+           AS balance,
+       a.ORGANIZATION_ID,
+       CASE a.ORGANIZATION_ID
+           WHEN 82 THEN 'BMW: Организация ведения ТМЦ'
+           WHEN 83 THEN 'BBW: Склад Бест'
+           WHEN 84 THEN 'BDW: Дилеры'
+           WHEN 85 THEN 'BHW: Головной офис Бест'
+           WHEN 86 THEN 'BSW: Подрядчики'
+           WHEN 1369 THEN 'BFC: Строительство ОС'
+           ELSE 'Other organization'
+       END
+           AS "Наименованеи_организации"
+  FROM inv.mtl_system_items_b a
+ WHERE SEGMENT1 = '1001024715'
 
 
 /* Formatted on 20.12.2018 15:06:57 (QP5 v5.318) Service Desk  Mihail.Vasiljev */
