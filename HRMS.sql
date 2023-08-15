@@ -542,3 +542,134 @@ ORDER BY asp.vendor_name, papf.full_name
          AND furg.END_DATE IS NULL
 --    and fuser.user_name like 'SYS%'
 ORDER BY fuser.USER_NAME;
+
+
+/* HRMS Oracle Purchasing Position Hierarchy Setup Query*/
+SELECT 0                          levels,
+       pp.name                    position,
+       pse.parent_position_id     position_id,
+       pp.name                    PATH
+  FROM per_pos_structure_elements_v pse, per_positions pp
+ WHERE     pse.business_group_id =
+           (SELECT BUSINESS_GROUP_ID
+             FROM per_pos_structure_versions_v
+            WHERE     position_structure_id =
+                      (SELECT position_structure_id
+                         FROM per_position_structures_v)
+                  AND NVL (DATE_TO, SYSDATE + 1) >= SYSDATE)
+       AND pse.pos_structure_version_id =
+           (SELECT POS_STRUCTURE_VERSION_ID
+             FROM per_pos_structure_versions_v
+            WHERE     position_structure_id =
+                      (SELECT position_structure_id
+                         FROM per_position_structures_v)
+                  AND NVL (DATE_TO, SYSDATE + 1) >= SYSDATE)
+       AND pse.parent_position_id =
+           (SELECT DISTINCT parent_position_id
+             FROM per_pos_structure_elements_v pse
+            WHERE     pse.business_group_id =
+                      (SELECT BUSINESS_GROUP_ID
+                        FROM per_pos_structure_versions_v
+                       WHERE     position_structure_id =
+                                 (SELECT position_structure_id
+                                    FROM per_position_structures_v)
+                             AND NVL (DATE_TO, SYSDATE + 1) >= SYSDATE)
+                  AND pse.pos_structure_version_id =
+                      (SELECT POS_STRUCTURE_VERSION_ID
+                        FROM per_pos_structure_versions_v
+                       WHERE     position_structure_id =
+                                 (SELECT position_structure_id
+                                    FROM per_position_structures_v)
+                             AND NVL (DATE_TO, SYSDATE + 1) >= SYSDATE)
+                  AND NOT EXISTS
+                          (SELECT subordinate_position_id
+                             FROM per_pos_structure_elements_v pse1
+                            WHERE     pse1.business_group_id =
+                                      (SELECT BUSINESS_GROUP_ID
+                                        FROM per_pos_structure_versions_v
+                                       WHERE     position_structure_id =
+                                                 (SELECT position_structure_id
+                                                   FROM per_position_structures_v)
+                                             AND NVL (DATE_TO, SYSDATE + 1) >=
+                                                 SYSDATE)
+                                  AND pse1.pos_structure_version_id =
+                                      (SELECT POS_STRUCTURE_VERSION_ID
+                                        FROM per_pos_structure_versions_v
+                                       WHERE     position_structure_id =
+                                                 (SELECT position_structure_id
+                                                   FROM per_position_structures_v)
+                                             AND NVL (DATE_TO, SYSDATE + 1) >=
+                                                 SYSDATE)
+                                  AND pse1.subordinate_position_id =
+                                      pse.parent_position_id))
+       AND pse.parent_position_id = pp.position_id
+UNION
+    SELECT LEVEL,
+           has.name                                      position,
+           has.position_id                               position_id,
+              (SELECT name
+                 FROM per_positions
+                WHERE position_id = :p_parent_position_id)
+           || SYS_CONNECT_BY_PATH (has.name, ' --> ')    PATH
+      FROM (SELECT name, position_id
+              FROM apps.hr_all_positions_f_tl
+             WHERE language = USERENV ('LANG')) has,
+           per_pos_structure_elements pse
+     WHERE     pse.business_group_id =
+               (SELECT BUSINESS_GROUP_ID
+                 FROM per_pos_structure_versions_v
+                WHERE     position_structure_id =
+                          (SELECT position_structure_id
+                             FROM per_position_structures_v)
+                      AND NVL (DATE_TO, SYSDATE + 1) >= SYSDATE)
+           AND has.position_id = pse.subordinate_position_id
+           AND pse.pos_structure_version_id =
+               (SELECT POS_STRUCTURE_VERSION_ID
+                 FROM per_pos_structure_versions_v
+                WHERE     position_structure_id =
+                          (SELECT position_structure_id
+                             FROM per_position_structures_v)
+                      AND NVL (DATE_TO, SYSDATE + 1) >= SYSDATE)
+START WITH pse.parent_position_id =
+           (SELECT DISTINCT parent_position_id
+             FROM per_pos_structure_elements_v pse
+            WHERE     pse.business_group_id =
+                      (SELECT BUSINESS_GROUP_ID
+                        FROM per_pos_structure_versions_v
+                       WHERE     position_structure_id =
+                                 (SELECT position_structure_id
+                                    FROM per_position_structures_v)
+                             AND NVL (DATE_TO, SYSDATE + 1) >= SYSDATE)
+                  AND pse.pos_structure_version_id =
+                      (SELECT POS_STRUCTURE_VERSION_ID
+                        FROM per_pos_structure_versions_v
+                       WHERE     position_structure_id =
+                                 (SELECT position_structure_id
+                                    FROM per_position_structures_v)
+                             AND NVL (DATE_TO, SYSDATE + 1) >= SYSDATE) --  From Query 2
+                  AND NOT EXISTS
+                          (SELECT subordinate_position_id
+                             FROM per_pos_structure_elements_v pse1
+                            WHERE     pse1.business_group_id =
+                                      (SELECT BUSINESS_GROUP_ID
+                                        FROM per_pos_structure_versions_v
+                                       WHERE     position_structure_id =
+                                                 (SELECT position_structure_id
+                                                   FROM per_position_structures_v)
+                                             AND NVL (DATE_TO, SYSDATE + 1) >=
+                                                 SYSDATE)
+                                  AND pse1.pos_structure_version_id =
+                                      (SELECT POS_STRUCTURE_VERSION_ID
+                                        FROM per_pos_structure_versions_v
+                                       WHERE     position_structure_id =
+                                                 (SELECT position_structure_id
+                                                   FROM per_position_structures_v)
+                                             AND NVL (DATE_TO, SYSDATE + 1) >=
+                                                 SYSDATE)
+                                  AND pse1.subordinate_position_id =
+                                      pse.parent_position_id))
+CONNECT BY     PRIOR pse.subordinate_position_id = pse.parent_position_id
+           AND PRIOR pse.pos_structure_version_id =
+               pse.pos_structure_version_id
+           AND PRIOR pse.business_group_id = pse.business_group_id
+ORDER BY 1

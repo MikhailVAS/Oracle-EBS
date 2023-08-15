@@ -3520,3 +3520,44 @@ BEGIN
 END;
    
 /*====================================================================================*/
+
+/* PR-PO-USER-Terms-Investment_PRJ  */
+SELECT PORH.segment1       requisition_num,
+       porh.DESCRIPTION,
+       prj.description     AS project,
+       porh.ATTRIBUTE8     AS vat_rate_code,
+       FU.USER_NAME,
+       POH.segment1        po_num,
+       CON.PARTY_NAME,
+       CONTRAT_NO,
+       INVOICE_TYPE_NAME,
+       INVESTMENT_AGREEMENTS
+  FROM PO_HEADERS_ALL              POH,
+       PO_LINES_ALL                POL,
+       PO_DISTRIBUTIONS_ALL        POD,
+       PO_LINE_LOCATIONS_ALL       PLL,
+       PO_REQUISITION_LINES_ALL    PORL,
+       PO_REQ_DISTRIBUTIONS_ALL    PORD,
+       PO_REQUISITION_HEADERS_ALL  PORH,
+       XXTG_INVOICE_CONTRACT_V     CON,
+       FND_USER                    FU,
+       XXTG_PROJECT_V              PRJ
+ WHERE     1 = 1
+       AND POH.PO_HEADER_ID = POL.PO_HEADER_ID
+       AND POH.AUTHORIZATION_STATUS NOT IN
+               ('CANCELLED', 'REJECTED', 'RETURNED')
+       AND NVL (POL.CANCEL_FLAG, 'N') = 'N'
+       AND POL.PO_LINE_ID = POD.PO_LINE_ID
+       AND POH.PO_HEADER_ID = PLL.PO_HEADER_ID
+       AND POL.PO_LINE_ID = PLL.PO_LINE_ID
+       AND POD.line_location_id = pll.line_location_id
+       AND PORD.DISTRIBUTION_ID = POD.REQ_DISTRIBUTION_ID
+       AND PORL.requisition_line_id = PORD.requisition_line_id
+       AND PORL.requisition_header_id = PORH.requisition_header_id
+       AND TRUNC (PORL.need_by_date, 'MM') = TRUNC (PLL.need_by_date, 'MM')
+       AND CON.CONTRACT_ID =
+           TO_NUMBER (REGEXP_REPLACE (POH.attribute1, '[^0-9]', ''))
+       AND CON.INVESTMENT_AGREEMENTS IS NOT NULL
+       AND FU.user_id = PORH.created_by
+       AND PRJ.flex_value(+) = porh.ATTRIBUTE12
+       AND PORH.CREATION_DATE >= TRUNC (SYSDATE, 'YEAR') - 31
