@@ -212,3 +212,66 @@ BEGIN
                '________________________________________________________________');
     END LOOP;
 END;
+
+
+/* Search and auto-correct of cost */
+DECLARE
+BEGIN
+    FOR r
+        IN (SELECT DISTINCT cil.create_transaction_id,
+                            mtlnn.lot_number,
+                            cil.inventory_item_id,
+                            msib.segment1,
+                            cil.layer_cost,
+                            mt.organization_id,
+                            mt.source_code,
+                            cil.inv_layer_id
+             FROM inv.mtl_transaction_lot_numbers  mtlnn,
+                  bom.cst_inv_layers               cil,
+                  inv.mtl_material_transactions    mt,
+                  inv.mtl_system_items_b           msib,
+                  XXTG.xxtg_unit_cost              xuc
+            WHERE     cil.create_transaction_id = mt.transaction_id
+                  AND xuc.LOT_NUMBER(+) = mtlnn.lot_number
+                  AND cil.organization_id = mt.organization_id
+                  AND cil.inventory_item_id = mt.inventory_item_id
+                  AND msib.inventory_item_id = cil.inventory_item_id
+                  AND mt.transaction_quantity >= 0
+                  AND mtlnn.transaction_id = mt.transaction_id
+                  AND xuc.LOT_NUMBER IS NULL
+                  AND mt.source_code = 'RCV')
+    LOOP
+        INSERT INTO XXTG.XXTG_UNIT_COST (UNIT_COST_ID,
+                                         INVENTORY_ITEM_ID,
+                                         LOT_NUMBER,
+                                         UNIT_COST,
+                                         CURRENCY_CODE,
+                                         MODE#,
+                                         DATE_FROM,
+                                         DATE_TO,
+                                         INV_LAYER_ID,
+                                         CREATION_DATE,
+                                         FIRST_TRANSACTION_DATE,
+                                         CREATE_TRANSACTION_ID,
+                                         DATE_OF_CHANGE)
+                 VALUES (
+                            XXTG.XXTG_UNIT_COST_S.nextval,
+                            r.inventory_item_id,
+                            r.lot_number,
+                            r.layer_cost,
+                            'BYN',
+                            0,
+                            TO_DATE ('7/1/2016', 'MM/DD/YYYY'),
+                            TO_DATE ('1/1/2100', 'MM/DD/YYYY'),
+                            r.inv_layer_id,
+                            TO_DATE ('8/14/2023 2:24:12 PM',
+                                     'MM/DD/YYYY HH:MI:SS AM'),
+                            TO_DATE ('8/13/2023', 'MM/DD/YYYY'),
+                            r.create_transaction_id,
+                            TO_DATE ('8/14/2023 2:24:12 PM',
+                                     'MM/DD/YYYY HH:MI:SS AM'));
+
+        DBMS_OUTPUT.put_line ('ISSUANCE_ID:' || r.inventory_item_id || ' ' || r.lot_number);
+        COMMIT;
+    END LOOP;
+END;
