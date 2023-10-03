@@ -3561,3 +3561,62 @@ SELECT PORH.segment1       requisition_num,
        AND FU.user_id = PORH.created_by
        AND PRJ.flex_value(+) = porh.ATTRIBUTE12
        AND PORH.CREATION_DATE >= TRUNC (SYSDATE, 'YEAR') - 31
+
+
+
+/* Cancel PR*/
+UPDATE Po_Requisition_Lines_All
+   SET QUANTITY_DELIVERED = NULL,
+       LINE_LOCATION_ID = NULL,
+       SUGGESTED_VENDOR_NAME = 'ТрайдексБелПлюс ООО РБ',
+       SUGGESTED_VENDOR_LOCATION = 'OFFICE',
+       VENDOR_ID = '859360',
+       VENDOR_SITE_ID = '18482',
+       REQUEST_ID = NULL,
+       PROGRAM_APPLICATION_ID = NULL,
+       PROGRAM_ID = NULL,
+       PROGRAM_UPDATE_DATE = NULL,
+       REQS_IN_POOL_FLAG = 'Y'
+ WHERE REQUISITION_LINE_ID IN
+           (SELECT REQUISITION_LINE_ID
+             FROM Po_Requisition_Lines_All l, Po_Requisition_Headers_All h
+            WHERE     l.Requisition_Header_Id = h.Requisition_Header_Id
+                  AND h.segment1 IN ('132376')                    -- Number PR
+                  AND LINE_NUM IN (18)                              -- Line PR
+                                      );              
+                                              
+                                 
+/* Cancel PO Loaction Lines */
+UPDATE APPS.PO_LINE_LOCATIONS_all
+   SET QUANTITY_CANCELLED = 1,
+       CLOSED_DATE = TRUNC (SYSDATE, 'DD'),
+       CANCEL_FLAG = 'Y',
+       CLOSED_CODE = 'CLOSED',
+       ACCRUE_ON_RECEIPT_FLAG = 'N'
+ WHERE po_HEADER_ID IN (SELECT po_header_id
+                          FROM APPS.po_headers_all
+                         WHERE segment1 IN ('53495'))
+                                                       
+                
+/* Cancel PO  Lines */
+UPDATE po_lines_all
+   SET QUANTITY = -1,
+       CANCEL_FLAG = 'Y',
+       NEGOTIATED_BY_PREPARER_FLAG = 'Y',
+       CLOSED_CODE = 'CLOSED',
+       CLOSED_DATE = TRUNC (SYSDATE, 'DD'),
+       CLOSED_REASON = 'SD 717276'
+ WHERE po_HEADER_ID IN (SELECT po_header_id
+                          FROM APPS.po_headers_all
+                         WHERE segment1 IN ('53495'))
+                                 
+                                 
+/* Cancel PO  Headers */
+UPDATE po_headers_all h
+   SET h.authorization_status = 'REJECTED',                  --l_change_status
+       h.APPROVED_FLAG = 'Y',
+       approved_date = TRUNC (SYSDATE, 'DD'),
+       closed_code = 'CLOSE'
+ WHERE po_HEADER_ID = (SELECT po_header_id
+                         FROM APPS.po_headers_all
+                        WHERE segment1 IN ('53495'));
