@@ -155,3 +155,12 @@ SELECT DISTINCT
          --         AND furg.END_DATE IS NULL
 --         AND fuser.user_name LIKE '%IRINA.KIZHNEROVA%'
 ORDER BY fuser.USER_NAME
+
+/* set effective_date */
+INSERT INTO fnd_sessions (session_id, effective_date)
+    (SELECT USERENV ('sessionid'), SYSDATE
+       FROM DUAL
+      WHERE NOT EXISTS
+                (SELECT 'c'
+                   FROM fnd_sessions s1
+                  WHERE USERENV ('sessionid') = s1.session_id));

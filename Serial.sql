@@ -5,8 +5,10 @@ SELECT '''' || SERIAL_NUMBER || ''','
        lot_line_mark_id,
        RESERVATION_ID,
        LOT_NUMBER,
-       LENGTH (SERIAL_NUMBER),
        SERIAL_NUMBER,
+       LENGTH (SERIAL_NUMBER),
+       LENGTH(REGEXP_REPLACE(SERIAL_NUMBER, '[^[:alnum:] ]', '')) "Length Clear S/N",
+       REGEXP_REPLACE(SERIAL_NUMBER, '[^[:alnum:] ]', '') "Clear S/N",
        attribute9
            "DID",
        (SELECT DISTINCT ctxh.SEGMENT1

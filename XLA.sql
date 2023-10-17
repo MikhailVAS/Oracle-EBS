@@ -322,3 +322,78 @@ UPDATE xla.xla_events a
                                                      49477362,
                                                      49477461,
                                                      49560697)));
+
+-- XLA AP Invoice in xla_ae_lines
+SELECT a.*  
+  FROM xla.xla_ae_lines a
+ WHERE     1 = 1
+       AND ae_header_id IN
+               (SELECT ae_header_id
+                 FROM xla.xla_ae_headers a
+                WHERE     1 = 1
+                      AND entity_id IN
+                              (SELECT ENTITY_ID
+                                FROM xla.xla_transaction_entities
+                               WHERE     TRANSACTION_NUMBER =
+                                         'Акт приема-передачи Лицензий 62' -- Invoice Number
+                                     AND SOURCE_ID_INT_1 = '1217238' -- Invoice ID
+                                                                    ))
+
+-- XLA AP Invoice in xla_ae_line_acs
+SELECT a.*  
+  FROM xla.xla_ae_line_acs a
+ WHERE     1 = 1
+       AND ae_header_id IN
+               (SELECT ae_header_id
+                 FROM xla.xla_ae_headers a
+                WHERE     1 = 1
+                      AND entity_id IN
+                              (SELECT ENTITY_ID
+                                FROM xla.xla_transaction_entities
+                               WHERE     TRANSACTION_NUMBER =
+                                         'Акт приема-передачи Лицензий 62' -- Invoice Number
+                                     AND SOURCE_ID_INT_1 = '1217238' -- Invoice ID
+                                                                    ))
+
+
+-- XLA AP Invoice in xla_ae_headers
+SELECT a.*
+  FROM xla.xla_ae_headers a
+ WHERE     1 = 1
+       AND entity_id IN
+               ( (SELECT ENTITY_ID
+                  FROM xla.xla_transaction_entities
+                 WHERE     TRANSACTION_NUMBER =
+                           'Акт приема-передачи Лицензий 62' -- Invoice Number
+                       AND SOURCE_ID_INT_1 = '1217238'           -- Invoice ID
+                                                      ))
+                                                      
+/* XLA xla_events Final*/
+UPDATE xla.xla_events
+   SET EVENT_STATUS_CODE = 'F', PROCESS_STATUS_CODE = 'F'
+ WHERE entity_id IN
+           ( (SELECT ENTITY_ID
+              FROM xla.xla_transaction_entities
+             WHERE     TRANSACTION_NUMBER =
+                       'Акт приема-передачи Лицензий 62'
+                   AND SOURCE_ID_INT_1 = '1217238'               -- Invoice ID
+                                                  ))
+
+-- XLA AP Invoice in xla_events
+SELECT a.*
+  FROM xla.xla_events a
+ WHERE entity_id IN
+           ( (SELECT ENTITY_ID
+                  FROM xla.xla_transaction_entities
+                 WHERE     TRANSACTION_NUMBER =
+                           'Акт приема-передачи Лицензий 62' -- Invoice Number
+                       AND SOURCE_ID_INT_1 = '1217238'           -- Invoice ID
+                                                      ))
+
+-- XLA AP Invoice in xla_transaction_entities
+SELECT *
+  FROM xla.xla_transaction_entities
+ WHERE     TRANSACTION_NUMBER =
+           'Акт приема-передачи Лицензий 62' -- Invoice Number
+       AND SOURCE_ID_INT_1 = '1217238'   -- Invoice ID
+
