@@ -1,5 +1,15 @@
 Internal Req
 
+/* Find Internal Req type by material transaction*/
+SELECT ATTRIBUTE1 AS "Internal Req Type"
+  FROM PO.PO_REQUISITION_HEADERS_all
+ WHERE     1 = 1
+       AND SEGMENT1 IN
+               (SELECT ORIG_SYS_DOCUMENT_REF     AS "Internal Req"
+                 FROM oe_order_headers_all oeh, mtl_material_transactions mmt
+                WHERE     mmt.TRANSACTION_SOURCE_ID = oeh.SOURCE_DOCUMENT_ID
+                      AND mmt.transaction_id = '47242030')
+
 /* Formatted on 10/26/2021 10:36:13 AM (QP5 v5.326) Service Desk  Mihail.Vasiljev */
 SELECT DISTINCT prh.segment1
            ir_number,
@@ -200,5 +210,5 @@ UPDATE po.PO_REQUISITION_LINES_all
                                ATTRIBUTE_CATEGORY = NULL, ATTRIBUTE4 = NULL
  -- select REFERENCE_NUM, ATTRIBUTE_CATEGORY, ATTRIBUTE4 from po.PO_REQUISITION_LINES_all
  WHERE REQUISITION_HEADER_ID IN (SELECT REQUISITION_HEADER_ID
-                                   FROM PO.PO_REQUISITION_HEADERS_all
+                                   FROM PO.PO_REQUISITION_HEADERwaS_all
                                   WHERE SEGMENT1 IN (102236))

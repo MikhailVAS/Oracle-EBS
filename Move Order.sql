@@ -6,6 +6,14 @@ UPDATE MTL_TXN_REQUEST_LINES
              WHERE CONCATENATED_SEGMENTS = '2342.Демонтаж.7439')
 WHERE HEADER_ID = 3908071 -- MOVE_ORDER_HEADER_ID
 
+/* Hold in Move Order  (QP5 v5.388) Service Desk 724205 Mihail.Vasiljev 
+Warning: Some deliveries selected for Ship Confirm have errors or warnings.
+Error: Ship Confirm of Delivery line 757421 is not allowed because a hold exists at the order line level.
+------------------------------------
+Warning: The Ship Confirm option selected will unassign all the lines from delivery 868048 .*/
+DELETE FROM oe_order_holds_all
+      WHERE released_flag = 'N' AND LINE_ID = '1686507'
+      
 
 --SELECT *
 --  FROM mtl_txn_request_lines mtrl

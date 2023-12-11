@@ -526,3 +526,111 @@ SELECT DISTINCT pv.VENDOR_ID,
        AND pv.VENDOR_NAME != hp.party_name
        AND pv.VENDOR_TYPE_LOOKUP_CODE = 'EMPLOYEE'
        AND pv.VENDOR_NAME != emp.full_name
+
+       /* eFirm trouble long find > 6 min (360 sec default timeout*/
+  SELECT *
+    FROM (  SELECT aps.VENDOR_ID,
+                   aps.VENDOR_NAME,
+                   aps.VENDOR_NAME_ALT,
+                   aps.VENDOR_TYPE_LOOKUP_CODE,
+                   aps.num_1099,
+                   aps.end_date_active,
+                   aps.vat_registration_num,
+                   aps.attribute1,
+                   aps.attribute4,
+                   'UpdateEnable'                detail_Flag,
+                   DECODE (
+                       (SELECT xest3.status
+                         FROM xxtg_ef_status xest3
+                        WHERE     xest3.vendor_id = aps.VENDOR_ID
+                              AND xest3.ef_id =
+                                  (  SELECT MAX (ef_id)
+                                       FROM xxtg_ef_status xest2
+                                      WHERE xest2.vendor_id = aps.VENDOR_ID
+                                   GROUP BY xest2.vendor_id)),
+                       'REJECTED', 'False',
+                       'True')                   history_detail,
+                   (  SELECT MAX (ef_id)
+                        FROM xxtg_ef_status xest2
+                       WHERE xest2.vendor_id = aps.VENDOR_ID
+                    GROUP BY xest2.vendor_id)    AS ef_id,
+                   DECODE (
+                       (SELECT xest3.status
+                         FROM xxtg_ef_status xest3
+                        WHERE     xest3.vendor_id = aps.VENDOR_ID
+                              AND xest3.ef_id =
+                                  (  SELECT MAX (ef_id)
+                                       FROM xxtg_ef_status xest2
+                                      WHERE xest2.vendor_id = aps.VENDOR_ID
+                                   GROUP BY xest2.vendor_id)),
+                       'PROCESSED', 'APPROVED',
+                       'REJECTED', 'REJECTED',
+                       'APPROVED')               AS approval_status,
+                   CASE
+                       WHEN NVL (aps.end_date_active, SYSDATE + 1) > SYSDATE
+                       THEN
+                           'active'
+                       ELSE
+                           'inactive'
+                   END                           AS enabled
+              FROM ap_suppliers aps
+             WHERE aps.vendor_id NOT IN
+                       (SELECT NVL (vendor_id, -1)
+                          FROM xxtg_ef_status xest
+                         WHERE     xest.STATUS NOT IN ('PROCESSED', 'REJECTED')
+                               AND xest.ef_id IN (  SELECT MAX (ef_id)
+                                                      FROM xxtg_ef_status xxe
+                                                  GROUP BY vendor_id))
+          GROUP BY aps.VENDOR_ID,
+                   aps.VENDOR_NAME,
+                   aps.VENDOR_NAME_ALT,
+                   aps.VENDOR_TYPE_LOOKUP_CODE,
+                   aps.num_1099,
+                   aps.end_date_active,
+                   aps.vat_registration_num,
+                   aps.attribute1,
+                   aps.attribute4
+          UNION ALL
+          SELECT NVL (xes.VENDOR_ID, asu.VENDOR_ID),
+                 NVL (xes.VENDOR_NAME, asu.VENDOR_NAME),
+                 NVL (xes.VENDOR_NAME_ALT, asu.VENDOR_NAME_ALT),
+                 NVL (xes.VENDOR_TYPE_LOOKUP_CODE, asu.VENDOR_TYPE_LOOKUP_CODE),
+                 NVL (xes.Jgzz_Fiscal_Code, asu.num_1099),
+                 NVL (xes.end_date_active, asu.end_date_active),
+                 NVL (xes.TAX_REFERENCE, asu.vat_registration_num),
+                 NVL (xes.attribute1, asu.attribute1),
+                 NVL (xes.attribute4, asu.attribute4),
+                 CASE
+                     WHEN xest.STATUS = 'SAVED' THEN 'UpdateEnableSave'
+                     ELSE 'UpdateDisable'
+                 END
+                     AS detail_Flag,
+                 CASE WHEN xest.STATUS = 'SAVED' THEN 'True' ELSE 'False' END
+                     AS history_detail,
+                 xest.ef_id,
+                 CASE
+                     WHEN xest.STATUS = 'SAVED' THEN 'SAVED'
+                     ELSE 'WAITING_APPROVAL'
+                 END
+                     AS approval_status,
+                 CASE
+                     WHEN NVL (NVL (xes.end_date_active, asu.end_date_active),
+                               SYSDATE + 1) >
+                          SYSDATE
+                     THEN
+                         'active'
+                     ELSE
+                         'inactive'
+                 END
+                     AS enabled
+            FROM xxtg_ef_suppliers xes, ap_suppliers asu, xxtg_ef_status xest
+           WHERE     asu.vendor_id(+) = xest.vendor_id
+                 AND xest.ef_id = xes.ef_id(+)
+                 AND xest.STATUS NOT IN ('PROCESSED', 'REJECTED')
+                 AND (   xes.vendor_id IS NULL
+                      OR xest.ef_id IN (  SELECT MAX (ef_id)
+                                            FROM xxtg_ef_status xxe
+                                        GROUP BY vendor_id)) /*SELECT aps.VENDOR_ID, aps.VENDOR_NAME, aps.VENDOR_NAME_ALT, aps.VENDOR_TYPE_LOOKUP_CODE, aps.num_1099, aps.end_date_active, aps.vat_registration_num, aps.attribute1, aps.attribute4, 'Y' detail_Flag FROM ap_suppliers aps*/
+                                                            ) QRSLT
+ORDER BY QRSLT.VENDOR_NAME ASC
+

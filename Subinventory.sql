@@ -60,3 +60,36 @@ SELECT secondary_inventory_name     subinventory,
                                                 AND TO_DATE ('31.10.2021',
                                                              'dd.mm.yyyy')
                        AND TRANSACTION_QUANTITY != 0)
+
+
+/* Formatted on (QP5 v5.326) Service Desk 728890 Mihail.Vasiljev */
+UPDATE inv.mtl_secondary_inventories
+   SET DESCRIPTION = 'Duplicate ' || DESCRIPTION,
+       INVENTORY_ATP_CODE = '2',
+       AVAILABILITY_TYPE = '2',
+       RESERVABLE_TYPE = '2',
+       STATUS_ID = '42'
+WHERE     status_id != '42'
+       AND ORGANIZATION_ID = '85'
+       AND description IN
+               (  SELECT description
+                    FROM inv.mtl_secondary_inventories
+                   WHERE organization_id = '85' AND status_id != '42'
+                GROUP BY description
+                  HAVING COUNT (*) > 1)
+       AND secondary_inventory_name NOT IN
+               (SELECT DISTINCT SUBINVENTORY_CODE
+                 FROM MTL_ONHAND_QUANTITIES OQ
+                WHERE     ORGANIZATION_ID = '85'
+                      AND OQ.SUBINVENTORY_CODE IN
+                              (SELECT ss1.secondary_inventory_name
+                                FROM inv.mtl_secondary_inventories ss1
+                               WHERE ss1.description IN
+                                         ( (  SELECT DISTINCT ss.description
+                                              FROM inv.mtl_secondary_inventories
+                                                   ss
+                                             WHERE     ss.organization_id =
+                                                       '85'
+                                                   AND ss.status_id != '42'
+                                          GROUP BY ss.description
+                                            HAVING COUNT (*) > 1))))

@@ -1477,6 +1477,20 @@ commit;
   END ;      
 
 
+/* Приход средневзвешенный курс (QP5 v5.326) Service Desk 727299 Mihail.Vasiljev */
+UPDATE PO.po_headers_all
+   SET RATE_DATE = TO_DATE ('09.11.2023', 'dd.mm.yyyy'),
+       RATE = 3.4166,
+       RATE_TYPE = 'Spot'
+WHERE segment1 IN ('53355')
+
+/* Formatted on (QP5 v5.388) Service Desk 727299 Mihail.Vasiljev */
+UPDATE PO.po_distributions_all
+   SET RATE_DATE = TO_DATE ('09.11.2023', 'dd.mm.yyyy'), RATE = 3.4166
+WHERE PO_HEADER_ID = (SELECT PO_HEADER_ID
+                         FROM PO.po_headers_all
+                        WHERE segment1 IN ('53355'))
+
   /* 635920 Приход средневзвешенный курс 
  (QP5 v5.326) Service Desk 635920 Mihail.Vasiljev */
 UPDATE PO.po_headers_all
@@ -3236,20 +3250,6 @@ declare
    
 commit;   
   END ;      
-
-
-  /* 635920 Приход средневзвешенный курс 
- (QP5 v5.326) Service Desk 635920 Mihail.Vasiljev */
-UPDATE PO.po_headers_all
-   SET RATE_DATE = TO_DATE ('18.11.2023', 'dd.mm.yyyy'),
-       RATE = 2.4355,
-       RATE_TYPE = 'Spot'
-WHERE segment1 IN ('49941')
-
-/* Formatted (QP5 v5.326) Service Desk 635920 Mihail.Vasiljev */
-UPDATE PO.po_distributions_all
-   SET RATE_DATE = TO_DATE ('18.11.2023', 'dd.mm.yyyy'), RATE = 2.4355
-WHERE PO_DISTRIBUTION_ID in ( 1629200 ,1629201)
 
 /* Formatted on (QP5 v5.388) Service Desk 647730 Исправление суммы в PR Mihail.Vasiljev */
 UPDATE po_line_locations_all

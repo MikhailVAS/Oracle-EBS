@@ -163,6 +163,18 @@ SELECT DISTINCT aia.*
        AND aia.invoice_id = aid.invoice_id
        AND aia.INVOICE_DATE >= TO_DATE ('01.01.2020', 'dd.mm.yyyy')
        AND PO_DISTRIBUTION_ID IS NULL
+
+/* Find AR Invoice by Invoice file number */
+SELECT *
+  FROM APPS.XXTG_EHSCHF_AR_INV
+ WHERE INVOICE_NUM IN
+           (SELECT INVOICE_NUM
+              FROM XXTG.XXTG_EHSCHF_ISSUANCE
+             WHERE INVOICE_FILE_NUMBER IN ('190579561-2023-1420945406',
+                                           '190579561-2023-1420945431',
+                                           '190579561-2023-1420946469',
+                                           '190579561-2023-1420946471',
+                                           '190579561-2023-1420946593'))
 	   
 --==============================================================
 --1. Пришла заявка, что ЭСЧФ на портале не от того контрагента
