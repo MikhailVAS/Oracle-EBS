@@ -374,26 +374,11 @@ UPDATE APPS.xxtg_otf_headers_all
  AND  CREATED_BY = '6336'  --Сельванович, Ольга Анатольевна
 --====================================================			
 -- Не обновились статусы исходящего ЭСЧФ
-
-/*##### Formatted on Service Desk 539444 Mihail.Vasiljev #####*/
-UPDATE /*+ index(XXTG_EHSCHF_ISSUANCE, XXTG_EHSCHF_ISSUANCE_U1) */
-       XXTG_EHSCHF_ISSUANCE
-   SET DOC_STATUS = 'COMPLETED',
-       LAST_UPDATE_DATE =
-           TO_DATE ('10/11/2021 11:00:15', 'DD/MM/YYYY HH24:MI:SS'),
-           DATE_ISSUANCE    = to_date(CREATION_DATE,'dd.mm.yyyy'),
-       FILE_NAME =
-              'invoice-'
-           || INVOICE_FILE_NUMBER
-           || '-status-2021_11_10-COMPLETED.xml'
-WHERE     DOC_STATUS = 'XML_CREATED'
-       AND INVOICE_FILE_NUMBER IN
-               ('600274554-2021-0000000174');
 --====================================================			
 
 
 /* Formatted on 19.11.2021 19:46:37 (QP5 v5.326) Service Desk 541757 Mihail.Vasiljev 
- Mass update date in ESCF  */
+ Mass update date in ESCF by Upload File */
 DECLARE
     l_output   SYS_REFCURSOR;
 BEGIN
@@ -471,44 +456,44 @@ BEGIN
 END;
 
 
-/* Formatted on(QP5 v5.326) Service Desk 574946 Mihail.Vasiljev 
- Oksana podpisala na portale
- Mass update date in ESCF  */
+/* Mass update date in ESCF  */
 DECLARE
     l_output   SYS_REFCURSOR;
 BEGIN
     FOR r
         IN (SELECT INVOICE_FILE_NUMBER     AS EINVOICE_NUMBER,
-       TO_DATE ('25.04.2022 11:00:00', 'dd.mm.yyyy hh24:mi:ss')         AS SIGNATURE_DATE
+       TO_DATE ('28.11.2023', 'dd.mm.yyyy')         AS SIGNATURE_DATE
   FROM XXTG_EHSCHF_ISSUANCE
- WHERE INVOICE_FILE_NUMBER IN ('400088851-2017-0000000001',
-                               '100286730-2020-1000000116',
-                               '100286730-2020-1000000184',
-                               '100286730-2020-0000078065',
-                               '100286730-2020-0000078052',
-                               '101120215-2017-8000022861',
-                               '101120215-2017-8000035131',
-                               '291313486-2020-1290128135',
-                               '291313486-2020-1290133777',
-                               '300194035-2020-0000001398',
-                               '200132326-2018-0000000108',
-                               '490779270-2018-0000000870',
-                               '700048108-2020-0000000561',
-                               '690591512-2019-0000000678',
-                               '790687748-2021-0000000100',
-                               '190230915-2019-0000000991',
-                               '190230915-2019-0000000992',
-                               '700087591-2020-0000000560',
-                               '700087591-2018-0000000251',
-                               '700087591-2021-0000000054',
-                               '700087591-2019-0000000133',
-                               '791245970-2021-0000000049',
-                               '791245970-2021-0000000050',
-                               '400395983-2021-9310009233',
-                               '100028877-2021-0000008214',
-                               '100028877-2021-0000009213',
-                               '790375165-2017-0000000998',
-                               '200269163-2018-0000000010'))
+ WHERE  INVOICE_FILE_NUMBER in ('500036458-2017-0000010591',
+                                    '101120215-2017-8000022761',
+                                    '290479718-2017-0000000088',
+                                    '101120215-2017-8000052481',
+                                    '100071593-2017-1000000988',
+                                    '101120215-2017-8000069011',
+                                    '101120215-2017-8000069011',
+                                    '300035579-2018-2000000181',
+                                    '200050653-2019-5181101700',
+                                    '100302629-2020-0000025660',
+                                    '100308099-2020-1120184370',
+                                    '100308099-2020-1120184627',
+                                    '100308099-2020-1120184865',
+                                    '100308099-2020-1120185095',
+                                    '100308099-2020-1120185131',
+                                    '100308099-2020-1120185269',
+                                    '100308099-2020-1220253179',
+                                    '100308099-2020-1220253448',
+                                    '100308099-2020-1220253689',
+                                    '100308099-2020-1220254075',
+                                    '100308099-2020-1220254146',
+                                    '200094005-2017-0000011551',
+                                    '290479718-2017-0000000088',
+                                    '391043096-2017-0000000164',
+                                    '400026368-2017-0000000228',
+                                    '400026368-2017-0000000315',
+                                    '100302629-2020-0000025660',
+                                    '101120215-2017-8000022761',
+                                    '192579300-2019-0000000220',
+                                    '100236027-2016-0500074539'))
     LOOP
 
         UPDATE /*+ index(XXTG_EHSCHF_ISSUANCE, XXTG_EHSCHF_ISSUANCE_U1) */
@@ -517,16 +502,16 @@ BEGIN
                LAST_UPDATE_DATE =
                    TO_DATE (
                           ''
-                       || TO_DATE (r.SIGNATURE_DATE, 'dd/mm/yyyy')
+                       || TO_CHAR (r.SIGNATURE_DATE, 'dd/mm/yyyy')
                        || ' 11:00:15',
                        'DD/MM/YYYY HH24:MI:SS'),
                FILE_NAME =
                       'invoice-'
                    || INVOICE_FILE_NUMBER
                    || '-status-'
-                   || TO_DATE (r.SIGNATURE_DATE, 'yyyy_mm_dd')
+                   || TO_CHAR (r.SIGNATURE_DATE, 'yyyy_mm_dd')
                    || '-COMPLETED_SIGNED.xml'
-         WHERE     DOC_STATUS != 'COMPLETED_SIGNED'
+         WHERE     DOC_STATUS != 'COMPLETED_SIGNED' -- Comment if Try again 
                AND INVOICE_FILE_NUMBER = r.EINVOICE_NUMBER;
 
 
@@ -536,10 +521,10 @@ BEGIN
                LAST_UPDATE_DATE =
                    TO_DATE (
                           ''
-                       || TO_DATE (r.SIGNATURE_DATE, 'dd/mm/yyyy')
+                       || TO_CHAR (r.SIGNATURE_DATE, 'dd/mm/yyyy')
                        || '11:00:15',
                        'DD/MM/YYYY HH24:MI:SS')
-         WHERE     INVOICE_STATUS != 'COMPLETED_SIGNED'
+         WHERE    INVOICE_STATUS != 'COMPLETED_SIGNED' -- Comment if Try again 
                AND INVOICE_NUM = r.EINVOICE_NUMBER;
 
         INSERT INTO XXTG_EHSCHF_HISTORY (ISSUANCE_ID,
@@ -551,18 +536,18 @@ BEGIN
                    ID,
                    TO_DATE (
                           ''
-                       || TO_DATE (r.SIGNATURE_DATE, 'dd/mm/yyyy')
+                       || TO_CHAR (r.SIGNATURE_DATE, 'dd/mm/yyyy')
                        || ' 11:00:15',
                        'DD/MM/YYYY HH24:MI:SS'),
                       'invoice-'
                    || INVOICE_FILE_NUMBER
                    || '-status-'
-                   || TO_DATE (r.SIGNATURE_DATE, 'yyyy_mm_dd')
+                   || TO_CHAR (r.SIGNATURE_DATE, 'yyyy_mm_dd')
                    || '-COMPLETED_SIGNED.xml',
                    'COMPLETED_SIGNED',
                    TO_DATE (
                           ''
-                       || TO_DATE (r.SIGNATURE_DATE, 'dd/mm/yyyy')
+                       || TO_CHAR (r.SIGNATURE_DATE, 'dd/mm/yyyy')
                        || ' 11:00:05',
                        'DD/MM/YYYY HH24:MI:SS')
               FROM XXTG_EHSCHF_ISSUANCE
