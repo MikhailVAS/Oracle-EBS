@@ -1,3 +1,23 @@
+/* Find All Receipt for the period per employee */
+  SELECT RSH.RECEIPT_NUM,
+         TO_CHAR (RSH.CREATION_DATE, 'dd.mm.yyyy')    AS "Receipt_date",
+         (SELECT aps.VENDOR_NAME
+            FROM ap.ap_suppliers aps
+           WHERE aps.VENDOR_ID = RSH.VENDOR_ID)       AS "Vendor"
+    FROM PO.RCV_SHIPMENT_HEADERS RSH
+   WHERE     CREATED_BY =
+             (SELECT user_id
+               FROM fnd_user
+              WHERE EMPLOYEE_ID =
+                    (SELECT DISTINCT PERSON_ID
+                       FROM per_all_people_f
+                      WHERE FULL_NAME LIKE '%Сазоно%Мари%'))
+         AND CREATION_DATE BETWEEN TO_DATE ('19.09.2023 23:59:00',
+                                            'dd.mm.yyyy hh24:mi:ss')
+                               AND TO_DATE ('18.01.2024 23:59:00',
+                                            'dd.mm.yyyy hh24:mi:ss')
+ORDER BY RSH.CREATION_DATE
+
 /* Ошибка при создании PR
 Для позиции интегрируемой с Галактикой,
 флаг "Доставка в запасы" длжен быть снят
