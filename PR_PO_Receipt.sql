@@ -1,3 +1,62 @@
+/* Find All PR-PO-Receipt for the period per employee */
+SELECT                                                                     --*
+       (SELECT DISTINCT PRHA.SEGMENT1
+          FROM PO.PO_HEADERS_ALL              POH,
+               PO.PO_DISTRIBUTIONS_ALL        PDA,
+               PO.PO_REQ_DISTRIBUTIONS_ALL    PRDA,
+               PO.PO_REQUISITION_LINES_ALL    PRLA,
+               PO.PO_REQUISITION_HEADERS_ALL  PRHA
+         WHERE     PDA.REQ_DISTRIBUTION_ID = PRDA.DISTRIBUTION_ID
+               AND PRDA.REQUISITION_LINE_ID = PRLA.REQUISITION_LINE_ID
+               AND PRLA.REQUISITION_HEADER_ID = PRHA.REQUISITION_HEADER_ID
+               AND PDA.PO_HEADER_ID = rsh.PO_HEADER_ID)
+           AS "Reqisition_NUM",
+       (SELECT po.segment1
+          FROM PO.PO_HEADERS_ALL po
+         WHERE po.PO_HEADER_ID = rsh.PO_HEADER_ID)
+           AS "PO_NUM",
+       (SELECT RCHV.RECEIPT_NUM
+          FROM RCV_VRC_HDS_V RCHV
+         WHERE RCHV.shipment_header_id = rsh.SHIPMENT_HEADER_ID)
+           AS "Receipt_NUM",
+       (SELECT aps.VENDOR_NAME
+          FROM ap.ap_suppliers aps
+         WHERE aps.VENDOR_ID = (SELECT DISTINCT po.vendor_id
+                                  FROM PO.PO_HEADERS_ALL po
+                                 WHERE po.PO_HEADER_ID = rsh.PO_HEADER_ID))
+           AS "Vendor_Name",
+       (SELECT DISTINCT a.SEGMENT1
+         FROM inv.mtl_system_items_b a
+        WHERE a.INVENTORY_ITEM_ID = (SELECT item_id
+                                       FROM po_lines_all pol
+                                      WHERE pol.PO_LINE_ID = rsh.PO_LINE_ID))
+           AS "Item",
+       (SELECT DISTINCT a.DESCRIPTION
+         FROM inv.mtl_system_items_b a
+        WHERE a.INVENTORY_ITEM_ID = (SELECT item_id
+                                       FROM po_lines_all pol
+                                      WHERE pol.PO_LINE_ID = rsh.PO_LINE_ID))
+           AS "Item_Description",
+       rsh.QUANTITY,
+       rsh.QUANTITY_BILLED,
+       rsh.PO_UNIT_PRICE,
+       rsh.AMOUNT_BILLED,
+       rsh.CURRENCY_CODE
+  FROM PO.RCV_TRANSACTIONS rsh
+ WHERE                               -- rsh.SHIPMENT_HEADER_ID = '1219401' AND
+           rsh.TRANSACTION_TYPE = 'RECEIVE'
+       AND rsh.CREATED_BY =
+           (SELECT user_id
+             FROM fnd_user
+            WHERE EMPLOYEE_ID =
+                  (SELECT DISTINCT PERSON_ID
+                     FROM per_all_people_f
+                    WHERE FULL_NAME LIKE '%Сазоно%Мари%'))
+       AND rsh.CREATION_DATE BETWEEN TO_DATE ('19.09.2023 23:59:00',
+                                              'dd.mm.yyyy hh24:mi:ss')
+                                 AND TO_DATE ('18.01.2024 23:59:00',
+                                              'dd.mm.yyyy hh24:mi:ss')
+
 /* Find All Receipt for the period per employee */
   SELECT RSH.RECEIPT_NUM,
          TO_CHAR (RSH.CREATION_DATE, 'dd.mm.yyyy')    AS "Receipt_date",
