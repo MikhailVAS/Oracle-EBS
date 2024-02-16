@@ -5,7 +5,12 @@ SELECT FULL_NAME
                       FROM fnd_user
                      WHERE user_id = 7256)
 
-
+/* Find USER_ID by people name */
+SELECT user_id
+  FROM fnd_user
+ WHERE EMPLOYEE_ID = (SELECT DISTINCT PERSON_ID
+                        FROM per_all_people_f PAPF
+                       WHERE FULL_NAME LIKE '%Семейко%')  
 
 SELECT DISTINCT pf.person_id, pf.full_name
   FROM --applsys.fnd_user fu,

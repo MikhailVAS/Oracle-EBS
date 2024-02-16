@@ -103,3 +103,9 @@ UPDATE wsh.wsh_delivery_details
 SELECT * FROM  wsh.wsh_delivery_details DD
 --set c = 'P'
 where delivery_detail_id in (646874,646873)
+
+/* Formatted on PM (QP5 v5.388) Service Desk 737477 Mihail.Vasiljev */
+UPDATE XXTG_FA_MOVES_HDR
+   SET REQUEST_NUMBER = 'БТ 0013889'
+ WHERE TTN_NUMBER = 'БС №1668 Подряд'
+ AND HEADER_ID = '4416'

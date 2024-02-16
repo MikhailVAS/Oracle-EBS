@@ -19,6 +19,7 @@ SELECT                                                                     --*
           FROM RCV_VRC_HDS_V RCHV
          WHERE RCHV.shipment_header_id = rsh.SHIPMENT_HEADER_ID)
            AS "Receipt_NUM",
+        TRANSACTION_DATE AS "Receipt_Date",
        (SELECT aps.VENDOR_NAME
           FROM ap.ap_suppliers aps
          WHERE aps.VENDOR_ID = (SELECT DISTINCT po.vendor_id

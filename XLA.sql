@@ -11,6 +11,45 @@ UPDATE xla_events
                              WHERE transaction_set_id = '46646138')   --736721
                                                                    );
 
+/* Duplicate XLA Headers by material transaction on period*/
+  SELECT COUNT (a.ae_header_id)
+             AS "Count_XLA_Head",
+         a.ENTITY_ID,
+         te.transaction_number,
+         CASE mmt.ORGANIZATION_ID
+             WHEN 82 THEN 'BMW: Организация ведения ТМЦ'
+             WHEN 83 THEN 'BBW: Склад Бест'
+             WHEN 84 THEN 'BDW: Дилеры'
+             WHEN 85 THEN 'BHW: Головной офис Бест'
+             WHEN 86 THEN 'BSW: Подрядчики'
+             WHEN 1369 THEN 'BFC: Строительство ОС'
+             ELSE 'Other organization'
+         END
+             AS "Наименованеи_организации",
+         MTY.TRANSACTION_TYPE_NAME
+    FROM xla.xla_ae_headers a
+         LEFT JOIN xla.xla_transaction_entities te
+             ON te.ENTITY_ID = a.entity_id
+         LEFT JOIN mtl_material_transactions mmt
+             ON MMT.transaction_id = te.transaction_number
+         LEFT JOIN inv.MTL_TRANSACTION_TYPES MTY
+             ON MTY.TRANSACTION_TYPE_ID = mmt.TRANSACTION_TYPE_ID
+   WHERE a.entity_id IN
+             (SELECT ENTITY_ID
+               FROM xla.xla_transaction_entities
+              WHERE transaction_number IN
+                        (SELECT TO_CHAR (transaction_id)
+                          FROM inv.mtl_material_transactions mt
+                         WHERE TRANSACTION_DATE BETWEEN TO_DATE ('01.01.2024',
+                                                                 'dd.mm.yyyy')
+                                                    AND TO_DATE ('31.01.2024',
+                                                                 'dd.mm.yyyy')))
+GROUP BY a.ENTITY_ID,
+         te.transaction_number,
+         mmt.ORGANIZATION_ID,
+         MTY.TRANSACTION_TYPE_NAME
+  HAVING COUNT (a.ae_header_id) > 1
+
 
 /**xla accounting lines inventory*/
 SELECT te.SOURCE_ID_INT_1 transaction_id,  ae_line_num, ccid.segment2, ael.accounted_dr dr, accounted_cr cr

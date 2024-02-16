@@ -1118,7 +1118,7 @@ LEFT JOIN inv.mtl_serial_numbers MSN ON MSN.serial_number = XSN.serial_number
                                   FROM inv.mtl_system_items_b a
                                  WHERE SEGMENT1 = '"&F2&"');
 								 
-								 "
+                "
 								 
 = "UPDATE inv.mtl_serial_numbers
    SET SERIAL_NUMBER = '"&D2&"'
