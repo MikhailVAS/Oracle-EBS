@@ -44,3 +44,59 @@ SELECT                                                              --distinct
 UPDATE HZ_CUST_ACCT_SITES_ALL
    SET bill_to_flag = 'P'
  WHERE CUST_ACCOUNT_ID = 908693 AND ORIG_SYSTEM_REFERENCE = 'AR-109-3:330832'
+
+
+ /* Not creating Account log ora-01476 divisor is equal to zero*/
+SELECT app.amount_applied_from, app.*
+  FROM xla_events                      gt,
+       ar_receivable_applications_all  app,
+       ar_distributions_all            dist,
+       gl_sets_of_books                sob,
+       oe_system_parameters_all        osp,
+       ar_cash_receipts_all            cr,
+       ar_cash_receipt_history_all     crh,
+       ra_customer_trx_all             trx
+ WHERE     gt.event_type_code IN ('RECP_CREATE',
+                                  'RECP_UPDATE',
+                                  'RECP_RATE_ADJUST',
+                                  'RECP_REVERSE')
+       AND gt.application_id = 222
+       AND gt.event_date BETWEEN TO_DATE ('01-02-2024', 'DD-MM-YYYY')
+                             AND TO_DATE ('01-03-2024', 'DD-MM-YYYY')
+       AND gt.event_id = app.event_id
+       AND dist.source_table = 'RA' -- Don't need this join due to ar_app_dist_upg_v
+       AND dist.source_id = app.receivable_application_id
+       AND app.set_of_books_id = sob.set_of_books_id
+       AND DECODE (app.acctd_amount_applied_to,
+                   0, DECODE (app.acctd_amount_applied_from, 0, 'N', 'Y'),
+                   'N') =
+           'Y'
+       AND app.org_id = osp.org_id(+)
+       AND app.cash_receipt_id = cr.cash_receipt_id
+       AND app.cash_receipt_history_id = crh.cash_receipt_history_id(+)
+       AND app.applied_customer_trx_id = trx.customer_trx_id(+)
+       AND dist.source_type IN ('REC',
+                                'OTHER ACC',
+                                'ACC',
+                                'BANK_CHARGES',
+                                'ACTIVITY',
+                                'FACTOR',
+                                'REMITTANCE',
+                                'TAX',
+                                'DEFERRED_TAX',
+                                'UNEDISC',
+                                'EDISC',
+                                'CURR_ROUND',
+                                'SHORT_TERM_DEBT',
+                                'EXCH_LOSS',
+                                'EXCH_GAIN',
+                                'EDISC_NON_REC_TAX',
+                                'UNEDISC_NON_REC_TAX',
+                                'UNAPP')
+       AND NVL (app.amount_applied_from, 0) = 0
+       AND NVL (app.amount_applied, 0) = 0;
+
+/* Correction update ora-01476 divisor is equal to zero*/
+UPDATE ar_receivable_applications_all
+   SET AMOUNT_APPLIED = 0.01
+ WHERE RECEIVABLE_APPLICATION_ID = 2584118;
