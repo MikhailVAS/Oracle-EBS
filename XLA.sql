@@ -11,6 +11,29 @@ UPDATE xla_events
                              WHERE transaction_set_id = '46646138')   --736721
                                                                    );
 
+/* The Following Events Are Present In The Line Extract But MISSING In The Header Extract  */
+SELECT xe.application_id,
+       xte.entity_code        "Transaction Type",
+       xte.source_id_int_1    "Transaction Id",
+       xte.transaction_number "Transaction Number",
+       xe.event_id,
+       xet.event_class_code,
+       xe.event_type_code,
+       xe.event_status_code,
+       xe.process_status_Code,
+       xe.budgetary_control_flag,
+       xte.transaction_number
+  FROM xla_events xe, xla_transaction_entities_upg xte, xla_event_types_b xet
+ WHERE     1 = 1                       --xte.application_id = P_APPLICATION_ID
+       AND xte.entity_id = xe.entity_id
+       AND xet.application_id = xe.application_id
+       AND xet.event_type_code = xe.event_type_code
+       --       AND xe.application_id = P_APPLICATION_ID
+       --       AND xe.request_id = P_CREATE_ACCT_REQUEST_ID
+       --       AND xte.transaction_number IN ('20093093')
+       AND xe.event_id = 12470524
+
+
 /* Duplicate XLA Headers by material transaction on period*/
   SELECT COUNT (a.ae_header_id)
              AS "Count_XLA_Head",
