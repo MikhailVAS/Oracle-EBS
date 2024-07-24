@@ -56,3 +56,44 @@ FND_FORM_CUSTOM_PROP_LIST
               OR UPPER (A.Description) LIKE '%REQUEST_DATE%'
               OR UPPER (ca.summary) LIKE '%REQUEST_DATE%')
 ORDER BY A.description
+
+
+
+  SELECT ROWID,
+         ACTION_ID,
+         ARGUMENT_TYPE,
+         RULE_ID,
+         CREATED_BY,
+         FOLDER_PROMPT_BLOCK,
+         CREATION_DATE,
+         LAST_UPDATED_BY,
+         LAST_UPDATE_DATE,
+         LAST_UPDATE_LOGIN,
+         SEQUENCE,
+         ACTION_TYPE,
+         SUMMARY,
+         LANGUAGE,
+         ENABLED,
+         OBJECT_TYPE,
+         TARGET_OBJECT,
+         PROPERTY_NAME,
+         PROPERTY_VALUE,
+         MESSAGE_TYPE,
+         MESSAGE_TEXT,
+         MENU_ENTRY,
+         MENU_LABEL,
+         MENU_SEPERATOR,
+         MENU_ENABLED_IN,
+         BUILTIN_TYPE,
+         BUILTIN_ARGUMENTS,
+         MENU_ARGUMENT_SHORT,
+         MENU_ARGUMENT_LONG
+    FROM FND_FORM_CUSTOM_ACTIONS
+   WHERE (RULE_ID = '3636')
+ORDER BY sequence
+
+SELECT * FROM FND_FORM_CUSTOM_ACTIONS
+WHERE BUILTIN_ARGUMENTS IS NOT NULL 
+AND BUILTIN_TYPE = 'P'
+AND ENABLED = 'N'
+ORDER BY    to_date(CREATION_DATE,'dd.mm.yyyy')  DESC

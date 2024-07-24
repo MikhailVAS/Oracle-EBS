@@ -100,3 +100,110 @@ SELECT app.amount_applied_from, app.*
 UPDATE ar_receivable_applications_all
    SET AMOUNT_APPLIED = 0.01
  WHERE RECEIVABLE_APPLICATION_ID = 2584118;
+
+/* Finde  AR customet site adress*/
+    SELECT hps.*
+            FROM hz_party_sites    hps,
+                 hz_locations      hzl,
+                 fnd_territories_vl fvl,
+                 hz_contact_points email,
+                 hz_contact_points phone,
+                 hz_contact_points fax,
+                 hz_party_site_uses pay,
+                 hz_party_site_uses pur,
+                 hz_party_site_uses rfq
+           WHERE     1=1 --hps.status = 'A'
+                 AND hps.party_id = :1 --and hps.created_by_module like 'POS%'
+                 AND hzl.COUNTRY = fvl.TERRITORY_CODE
+                 AND email.owner_table_id(+) = hps.party_site_id
+                 AND email.owner_table_name(+) = 'HZ_PARTY_SITES'
+                 AND email.status(+) = 'A'
+                 AND email.contact_point_type(+) = 'EMAIL'
+                 AND email.primary_flag(+) = 'Y'
+                 AND phone.owner_table_id(+) = hps.party_site_id
+                 AND phone.owner_table_name(+) = 'HZ_PARTY_SITES'
+                 AND phone.status(+) = 'A'
+                 AND phone.contact_point_type(+) = 'PHONE'
+                 AND phone.phone_line_type(+) = 'GEN'
+                 AND phone.primary_flag(+) = 'Y'
+                 AND fax.owner_table_id(+) = hps.party_site_id
+                 AND fax.owner_table_name(+) = 'HZ_PARTY_SITES'
+                 AND fax.status(+) = 'A'
+                 AND fax.contact_point_type(+) = 'PHONE'
+                 AND fax.phone_line_type(+) = 'FAX'
+                 AND hps.location_id = hzl.location_id
+                 AND pay.party_site_id(+) = hps.party_site_id
+                 AND pur.party_site_id(+) = hps.party_site_id
+                 AND rfq.party_site_id(+) = hps.party_site_id
+                 AND pay.status(+) = 'A'
+                 AND pur.status(+) = 'A'
+                 AND rfq.status(+) = 'A'
+                 AND NVL (pay.end_date(+), SYSDATE) >= SYSDATE
+                 AND NVL (pur.end_date(+), SYSDATE) >= SYSDATE
+                 AND NVL (rfq.end_date(+), SYSDATE) >= SYSDATE
+                 AND NVL (pay.begin_date(+), SYSDATE) <= SYSDATE
+                 AND NVL (pur.begin_date(+), SYSDATE) <= SYSDATE
+                 AND NVL (rfq.begin_date(+), SYSDATE) <= SYSDATE
+                 AND pay.site_use_type(+) = 'PAY'
+                 AND pur.site_use_type(+) = 'PURCHASING'
+                 AND rfq.site_use_type(+) = 'RFQ'
+                 AND NOT EXISTS
+                         (SELECT 1
+                            FROM pos_address_requests par,
+                                 pos_supplier_mappings psm
+                           WHERE     psm.party_id = hps.party_id
+                                 AND psm.mapping_id = par.MAPPING_ID
+                                 AND party_site_id = hps.party_site_id
+                                 AND request_status = 'PENDING'
+                                 AND request_type IN ('UPDATE', 'DELETE'))
+
+                                 
+       
+       SELECT * FROM hz_parties WHERE PARTY_ID = 257829
+       
+       SELECT * FROM HZ_PARTY_SITES WHERE PARTY_ID = 257829
+       
+       SELECT * FROM hz_Customer_profiles WHERE PARTY_ID = 257829
+       
+       SELECT * FROM hz_code_assignments WHERE OWNER_TABLE_NAME = 'HZ_PARTIES' AND CLASS_CODE = 'OTHER'
+       
+/* Formatted on 6/5/2024 9:23:28 AM (QP5 v5.388) Service Desk  Mihail.Vasiljev */
+SELECT *
+  FROM HZ_PARTIES              HP,
+       HZ_PARTY_SITES          HPS,
+       HZ_CUST_ACCOUNTS        HCA,
+       HZ_CUST_ACCT_SITES_ALL  HCASA,
+       HZ_CUST_SITE_USES_ALL   HCSUA,
+       HZ_LOCATIONS            HL
+ WHERE     1 = 1
+       AND HP.PARTY_ID = HPS.PARTY_ID
+       AND HPS.PARTY_ID = HCA.PARTY_ID
+       AND HPS.PARTY_SITE_ID = HCASA.PARTY_SITE_ID
+       AND HCA.APPLICATION_ID = HCASA.APPLICATION_ID
+       AND HCA.CUST_ACCOUNT_ID = HCASA.CUST_ACCOUNT_ID
+       AND HCASA.CUST_ACCT_SITE_ID = HCSUA.CUST_ACCT_SITE_ID
+       AND HPS.LOCATION_ID = HL.LOCATION_ID
+--       AND HP.PARTY_ID = 257829
+       AND HP.PARTY_NAME = 'ЛэпТоп ЧТУП';
+
+SELECT PARTY_SITE_ID
+  FROM HZ_PARTY_SITES
+ WHERE PARTY_ID = '257829' AND PARTY_SITE_NAME = '.'
+       
+--       PARTY_ID = 257829
+--       PARTY_NUMBER = 21098
+--       PARTY_SITE_ID = 697808 BAD 
+
+SELECT *
+  FROM HZ_CUST_ACCT_SITES_ALL
+ WHERE PARTY_SITE_ID IN (SELECT PARTY_SITE_ID
+                           FROM HZ_PARTY_SITES
+                          WHERE PARTY_ID = '257829')
+       
+/* Active AR customet site adress*/
+UPDATE HZ_CUST_ACCT_SITES_ALL
+   SET STATUS = 'A'
+ WHERE PARTY_SITE_ID = '697808'
+
+       
+       

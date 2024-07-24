@@ -1,4 +1,23 @@
-﻿  SELECT SOB.SET_OF_BOOKS_ID
+﻿  /* Formatted on 6/28/2024 9:44:13 AM (QP5 v5.388) Service Desk  Mihail.Vasiljev */
+SELECT *
+  FROM GL_INTERFACE
+ WHERE    1=1 -- STATUS != 'P'
+       AND ACCOUNTING_DATE BETWEEN TO_DATE ('01.05.2024', 'dd.mm.yyyy')
+                               AND TO_DATE ('31.05.2024', 'dd.mm.yyyy')
+                               AND (ENTERED_DR = 973.12 OR ENTERED_CR = 973.12)
+                               OR (ENTERED_DR = 785.84 OR ENTERED_CR = 785.84)
+                               
+                               
+/* Formatted on 6/28/2024 2:38:45 PM (QP5 v5.388) Service Desk  Mihail.Vasiljev */
+UPDATE GL_INTERFACE
+   SET CODE_COMBINATION_ID = '1037538',-- 0
+       ATTRIBUTE2 = 'Y',-- Null
+       CODE_COMBINATION_ID_INTERIM = '1037538'-- 0
+       ,STATUS = 'P'
+ WHERE STATUS = 'EF05'
+  
+  
+  SELECT SOB.SET_OF_BOOKS_ID
              "ID",
          SOB.NAME,
          SOB.SHORT_NAME,

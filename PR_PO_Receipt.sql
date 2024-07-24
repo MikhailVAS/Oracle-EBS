@@ -104,8 +104,8 @@ UPDATE Po_Requisition_Lines_All
            (SELECT REQUISITION_LINE_ID
               FROM Po_Requisition_Lines_All l, Po_Requisition_Headers_All h
              WHERE     l.Requisition_Header_Id = h.Requisition_Header_Id
-                   AND h.segment1 IN ('108683') -- Number PR
-				   AND LINE_NUM = 555 -- Line PR
+                   AND h.segment1 IN ('137812') -- Number PR
+				   --AND LINE_NUM = 555 -- Line PR
                    ); 
 				   
 /* 	Update need by date in  PO*/	   
@@ -415,7 +415,7 @@ UPDATE po.po_distributions_all
 /*Исключение , когда в PO показывает что курс валютаыесть , а в базе нету */
 UPDATE PO.po_distributions_all
    SET RATE_DATE = TO_DATE ('04.05.2021', 'dd.mm.yyyy'), RATE = 2.4265
- WHERE PO_DISTRIBUTION_ID = 1127013       
+ WHERE PO_DISTRIBUTION_ID = 1127013      
               
 /* Find incorect amount in PO by PR with currency rate*/
 SELECT prha.segment1
@@ -1571,18 +1571,27 @@ WHERE PO_HEADER_ID = (SELECT PO_HEADER_ID
                          FROM PO.po_headers_all
                         WHERE segment1 IN ('53355'))
 
-  /* 635920 Приход средневзвешенный курс 
- (QP5 v5.326) Service Desk 635920 Mihail.Vasiljev */
-UPDATE PO.po_headers_all
-   SET RATE_DATE = TO_DATE ('18.11.2023', 'dd.mm.yyyy'),
-       RATE = 2.4355,
-       RATE_TYPE = 'Spot'
-WHERE segment1 IN ('49941')
-
 /* Formatted (QP5 v5.326) Service Desk 635920 Mihail.Vasiljev */
 UPDATE PO.po_distributions_all
    SET RATE_DATE = TO_DATE ('18.11.2023', 'dd.mm.yyyy'), RATE = 2.4355
 WHERE PO_DISTRIBUTION_ID in ( 1629200 ,1629201)
+
+ /* Update PO distributions rate by need_by_date*/
+UPDATE PO.po_distributions_all
+   SET RATE_DATE = TO_DATE ('09.04.2024', 'dd.mm.yyyy'), RATE = 3.5202
+ WHERE     PO_HEADER_ID = (SELECT PO_HEADER_ID
+                             FROM PO.po_headers_all
+                            WHERE segment1 IN ('55009'))
+       AND PO_LINE_ID IN
+               (SELECT PO_LINE_ID
+                 FROM APPS.PO_LINE_LOCATIONS_all
+                WHERE     po_HEADER_ID IN (SELECT po_header_id
+                                             FROM PO.po_headers_all
+                                            WHERE segment1 IN ('55009'))
+                      AND NEED_BY_DATE BETWEEN TO_DATE ('01.04.2024',
+                                                        'dd.mm.yyyy')
+                                           AND TO_DATE ('30.04.2024',
+                                                        'dd.mm.yyyy')); 
 
 /* Formatted on (QP5 v5.388) Service Desk 647730 Исправление суммы в PR Mihail.Vasiljev */
 UPDATE po_line_locations_all

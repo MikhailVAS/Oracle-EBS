@@ -11,6 +11,43 @@ UPDATE xla_events
                              WHERE transaction_set_id = '46646138')   --736721
                                                                    );
 
+/* Send to recalculation Acc in DG by AP invoice*/
+UPDATE xla_events
+   SET event_status_code = 'U', process_status_code = 'I'
+ WHERE ENTITY_ID IN
+           ((SELECT ENTITY_ID
+                                FROM xla.xla_transaction_entities
+                               WHERE     TRANSACTION_NUMBER =
+                                         'ШШ 3838264' -- Invoice Number
+                                     AND SOURCE_ID_INT_1 = '1280186' -- Invoice ID
+                                                                    ));    
+
+/* XLA NOT EXISTS IN DG*/
+SELECT *
+  FROM XXTG_GL001_DOUBLE_GLOBAL g
+ WHERE     NOT EXISTS
+               (SELECT 1
+                  FROM xla_ae_headers h
+                 WHERE ae_header_id = g.d_ae_header_id)
+       AND D_ACCOUNTING_DATE BETWEEN TO_DATE ('01.05.2024', 'dd.mm.yyyy')
+                                 AND TO_DATE ('31.05.2024', 'dd.mm.yyyy')
+--       AND (D_SEGMENT2 = '9011' OR c_SEGMENT2 = '9011')
+             AND D_APPL_ID != 101
+
+
+/* GL Journals NOT EXISTS IN DG*/
+SELECT *
+  FROM XXTG_GL001_DOUBLE_GLOBAL dg1
+ WHERE     1 = 1
+       AND D_ACCOUNTING_DATE BETWEEN TO_DATE ('01.05.2024', 'dd.mm.yyyy')
+                                 AND TO_DATE ('31.05.2024', 'dd.mm.yyyy')
+       AND D_APPL_ID = 101
+       AND NOT EXISTS
+               (SELECT je_header_id
+                  FROM gl_je_headers
+                 WHERE PERIOD_NAME = 'MAY-24' AND je_header_id = d_doc_id);
+                                                                               
+
 /* The Following Events Are Present In The Line Extract But MISSING In The Header Extract  */
 SELECT xe.application_id,
        xte.entity_code        "Transaction Type",
@@ -459,3 +496,67 @@ SELECT *
            'Акт приема-передачи Лицензий 62' -- Invoice Number
        AND SOURCE_ID_INT_1 = '1217238'   -- Invoice ID
 
+
+select xte.application_id        as appl_id
+      ,xte.entity_code           as entity_code
+      ,ec.event_class_code       as event_class_code
+      ,ec.name                   as event_class
+      ,xal.code_combination_id   as cc_id     
+      ,fnd_flex_ext.get_segs('SQLGL','GL#',gl.chart_of_accounts_id, xal.code_combination_id)      as ACCOUNT
+      --,xla_oa_functions_pkg.get_ccid_description(gl.chart_of_accounts_id,xal.code_combination_id) as account_description
+      ,xah.ae_header_id          as xah_ae_header_id
+      ,xal.ae_line_num           as xal_ae_line_num
+      ,xal.ledger_id             as xal_ledger_id
+      ,xte.ledger_id             as xte_ledger_id
+      ,xae.event_type_code       as event_type_code
+      ,et.name                   as event_type
+      ,xae.event_number          as event_number
+      ,xal.accounting_class_code as acc_class_code   -- класс учета
+      ,lk1.meaning               as accounting_class
+      ,xal.accounting_date       as accounting_date
+      ,xal.accounted_dr          as accounted_dr
+      ,xal.accounted_cr          as accounted_cr
+      ,xal.currency_code         as currency_code
+      ,nvl(xte.source_id_int_1, -99) as source_id_int_1
+      ,decode(xal.party_type_code, 'C', xal.party_id)      as customer_id
+      ,decode(xal.party_type_code, 'C', xal.party_site_id) as customer_site_id
+from xla.xla_transaction_entities  xte
+   , xla.xla_ae_headers            xah
+   , xla.xla_ae_lines              xal
+   , xla.xla_events                xae
+   , xla_lookups                   lk1
+   , xla_gl_ledgers_v              gl   
+   , xla.xla_event_types_tl        et
+   , xla.xla_event_classes_tl      ec
+where 1=1
+      -- sla xah
+      and xah.entity_id      = xte.entity_id
+      and xah.application_id = xte.application_id
+      and xah.ledger_id      = xal.ledger_id
+      -- sla xal
+      and xal.ae_header_id   = xah.ae_header_id
+      and xal.application_id = xah.application_id
+      and (nvl(xal.accounted_dr,0) != 0 or nvl(xal.accounted_cr,0)!=0)
+      -- sla xae
+      and xae.application_id  = xah.application_id
+      and xae.event_id        = xah.event_id  
+      -- lk1
+      and lk1.lookup_code = xal.accounting_class_code
+      and lk1.lookup_type = 'XLA_ACCOUNTING_CLASS'
+      -- gl
+      and gl.ledger_id = xah.ledger_id
+      -- et 
+      and et.application_id  = xte.application_id
+      and et.entity_code     = xte.entity_code      
+      and et.event_type_code = xae.event_type_code
+      and et.language        = USERENV('LANG')
+      -- ec
+      and ec.application_id   = xte.application_id
+      and ec.entity_code      = xte.entity_code
+      and ec.event_class_code = et.event_class_code
+      and ec.language         = USERENV('LANG')
+      -- ======
+      -- and xte.entity_code    = 'RECEIPTS'
+      -- and xte.application_id = 222
+      -- and xte.ledger_id = fnd_profile.value('GL_SET_OF_BKS_ID')
+      -- and nvl(source_id_int_1,(-99)) = 

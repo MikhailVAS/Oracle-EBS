@@ -39,6 +39,14 @@ SELECT '''' || SERIAL_NUMBER || ''','
          WHERE     SI.ORGANIZATION_ID = sn.CURRENT_ORGANIZATION_ID
                AND SI.SECONDARY_INVENTORY_NAME = sn.CURRENT_SUBINVENTORY_CODE)
            AS "Subinv name",
+       'update mtl_serial_numbers set LOT_NUMBER = '''
+       || sn.LOT_NUMBER
+       || ''' where SERIAL_NUMBER = ('''
+       || SERIAL_NUMBER
+       || ''') and INVENTORY_ITEM_ID in (SELECT DISTINCT INVENTORY_ITEM_ID
+                                  FROM inv.mtl_system_items_b a
+                                 WHERE a.SEGMENT1 in (''1013071216''));'
+           SN_LOT_FIX,
        sn.*
   FROM inv.mtl_serial_numbers sn
  WHERE serial_number IN ('893750305090076395',
@@ -1128,8 +1136,4 @@ LEFT JOIN inv.mtl_serial_numbers MSN ON MSN.serial_number = XSN.serial_number
                                  WHERE SEGMENT1 = '"&F2&"');
 								 
 								 " 
-
-
-
-
 

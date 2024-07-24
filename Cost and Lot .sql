@@ -1,3 +1,69 @@
+--############# FORM Additional Cost Allocation ############# 
+/* Alloc Headers */
+SELECT *
+  FROM XXTG_ADDC_ALLOC_HEADERS
+ WHERE ADDC_ALLOCATION_ID IN (8826);
+
+/* Alloc Lines */
+SELECT *
+  FROM XXTG_ADDC_ALLOC_LINES
+ WHERE ADDC_ALLOCATION_ID IN (8826);
+
+/* Alloc source document */
+SELECT *
+  FROM XXTG_ADDC_ALLOC_SOURCE_INV
+ WHERE ADDC_ALLOCATION_ID IN (8826);
+
+UPDATE XXTG_ADDC_ALLOC_HEADERS SET ALLOC_STATUS = 'S' WHERE ADDC_ALLOCATION_ID IN (8828,8829,8827,8826,8797);
+
+ /* Additional cost allocation (View pars)*/
+SELECT xah.RECEIPT_NUM,
+       xal.addc_allocation_id,
+       xal.invoice_distribution_id,
+       xal.inventory_item_id,
+       xal.precise_layer_cost,
+       xal.new_layer_cost,
+       xal.unit_addc_cost_amount,
+       xal.cost_update_txn_id,
+       xal.created_by,
+       xal.creation_date,
+       xal.last_updated_by,
+       xal.last_update_date,
+       xal.last_update_login,
+       msi.segment1,
+       msi.description,
+       xal.ROWID                             row_id,
+       NVL (aid.base_amount, aid.amount)     pre_alloc_amount,
+       aid.quantity_invoiced,
+       aid.unit_price,
+       cil.inv_layer_id,
+       mmt.cost_group_id,
+       xal.cost_adj_error,
+       cil.layer_cost                        current_cost,
+       cil.layer_quantity,
+       aid.dist_code_combination_id,
+       xah.*
+  FROM xxtg_addc_alloc_lines         xal,
+       xxtg_addc_alloc_headers       xah,
+       mtl_system_items_b            msi,
+       ap_invoice_distributions_all  aid,
+       rcv_transactions              rt,
+       mtl_material_transactions     mmt,
+       cst_inv_layers                cil
+ WHERE     xah.addc_allocation_id = xal.addc_allocation_id
+       AND msi.inventory_item_id = xal.inventory_item_id
+       AND msi.organization_id = xah.organization_id
+       AND aid.invoice_distribution_id = xal.invoice_distribution_id
+       AND rt.parent_transaction_id = aid.rcv_transaction_id
+       AND rt.transaction_type = 'DELIVER'
+       AND mmt.rcv_transaction_id = rt.transaction_id
+       AND cil.create_transaction_id = mmt.transaction_id
+       AND msi.segment1 = '3705081038'
+       AND xah.RECEIPT_NUM = '33710932(ENG24030501)'
+ 
+ --########################################################## 
+
+
 /* ============ Проверка layer_cost   ============  */
 SELECT distinct
 --cil.create_transaction_id, mtlnn.lot_number, cil.inv_layer_id, cil.inventory_item_id , msib.segment1,  cil.layer_cost, mt.organization_id, mt.subinventory_code, mt.source_code, mt.transaction_type_id, mt.transaction_date
