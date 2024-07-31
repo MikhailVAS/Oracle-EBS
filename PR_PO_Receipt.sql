@@ -2267,6 +2267,16 @@ SELECT *
        AND PDA.po_header_id IN (SELECT po_header_id
                                   FROM APPS.po_headers_all
                                  WHERE segment1 IN ('28827', '28849'))
+
+/* Approve PO Release by PO and Number Release */
+UPDATE PO_RELEASES_ALL
+   SET APPROVED_FLAG = 'Y',
+       AUTHORIZATION_STATUS = 'APPROVED',
+       APPROVED_DATE = SYSDATE
+ WHERE     PO_HEADER_ID = (SELECT po_header_id
+                             FROM APPS.po_headers_all
+                            WHERE segment1 IN ('52798'))
+       AND RELEASE_NUM = 13
 								 
 /* Open PO or not viseble Receipt */
 BEGIN
