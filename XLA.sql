@@ -1,3 +1,65 @@
+/* Resend transactions on Acc recalculation by WSH_DELIVERY_NAME  */
+UPDATE xla_events
+   SET event_status_code = 'U', process_status_code = 'I'
+ WHERE ENTITY_ID IN
+           (SELECT ENTITY_ID
+             FROM xla.xla_transaction_entities
+            WHERE     entity_code = 'MTL_ACCOUNTING_EVENTS'
+                  AND SOURCE_ID_INT_1 IN
+                          (SELECT DISTINCT *
+                            FROM (SELECT TRANSACTION_ID -- Block find TR by Move Order
+                                    FROM mtl_material_transactions
+                                   WHERE -- INVENTORY_ITEM_ID IN (SELECT DISTINCT INVENTORY_ITEM_ID
+                                         --                                   FROM inv.mtl_system_items_b a
+                                         --                                  WHERE a.SEGMENT1 IN ('1051100972')) -- Item
+                                         --       AND
+                                          TRANSACTION_SOURCE_ID IN
+                                             (SELECT DISTINCT TXN_SOURCE_ID
+                                               FROM MTL_TXN_REQUEST_LINES
+                                                    MTRL
+                                              WHERE LINE_ID IN
+                                                        (SELECT MOVE_ORDER_LINE_ID
+                                                          FROM WSH_DELIVERY_DETAILS
+                                                         WHERE --SOURCE_HEADER_NUMBER = '318318'
+                                                               DELIVERY_DETAIL_ID IN
+                                                                   (SELECT DISTINCT
+                                                                           TDA.DELIVERY_DETAIL_ID
+                                                                     FROM WSH.WSH_DELIVERY_ASSIGNMENTS
+                                                                          TDA,
+                                                                          WSH.WSH_NEW_DELIVERIES
+                                                                          TND
+                                                                    WHERE     TND.name IN
+                                                                                  ('МЛ 0302064')   --Deliver Name TTN
+                                                                          AND TDA.DELIVERY_ID =
+                                                                              TND.DELIVERY_ID)))
+                                  UNION ALL
+                                  SELECT TRANSACTION_ID --Block find TR by Internal Req
+                                    FROM mtl_material_transactions
+                                   WHERE --  INVENTORY_ITEM_ID IN
+                                         --           (SELECT DISTINCT INVENTORY_ITEM_ID
+                                         --             FROM inv.mtl_system_items_b a
+                                         --            WHERE     a.SEGMENT1 IN ('1051100972')  -- Item
+                                         --                  AND
+                                          TRANSACTION_SOURCE_ID IN
+                                             (SELECT SOURCE_DOCUMENT_ID -- IR 1585784 TRANSACTION_SOURCE_ID
+                                               FROM oe_order_headers_all oh
+                                              WHERE --ORDER_NUMBER = '318318'  --  Internal.ORDER ENTRY
+                                                    oh.HEADER_ID IN
+                                                        (SELECT SOURCE_HEADER_ID
+                                                          FROM WSH_DELIVERY_DETAILS
+                                                         WHERE --SOURCE_HEADER_NUMBER = '318318'
+                                                               DELIVERY_DETAIL_ID IN
+                                                                   (SELECT DISTINCT
+                                                                           TDA.DELIVERY_DETAIL_ID
+                                                                     FROM WSH.WSH_DELIVERY_ASSIGNMENTS
+                                                                          TDA,
+                                                                          WSH.WSH_NEW_DELIVERIES
+                                                                          TND
+                                                                    WHERE     TND.name IN
+                                                                                  ('МЛ 0302064')   --Deliver Name TTN
+                                                                          AND TDA.DELIVERY_ID =
+                                                                              TND.DELIVERY_ID))))));
+                                                                              
 /* send transactions on recalculation */
 UPDATE xla_events
    SET event_status_code = 'U', process_status_code = 'I'
