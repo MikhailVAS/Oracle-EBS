@@ -17,6 +17,24 @@ UPDATE ap.AP_PAYMENT_SCHEDULES_ALL
 DELETE FROM ap.AP_SELECTED_INVOICES_ALL
       WHERE invoice_id IN (603451)
 
+
+ /* All Payment by Checkrun_name */
+SELECT *
+  FROM IBY_DOCS_PAYABLE_ALL
+ --WHERE DOCUMENT_PAYABLE_ID = '878082'
+ WHERE     CREATION_DATE > SYSDATE - 3
+       AND DOCUMENT_STATUS != 'PAYMENT_CREATED'
+       AND FORMATTING_PAYMENT_ID IN
+               (SELECT PAYMENT_ID
+                  FROM IBY_PAYMENTS_ALL
+                 WHERE PAYMENT_PROCESS_REQUEST_NAME IN ('13 08 24 (3)'))
+                 
+                 
+/*Find  Payment by Checkrun_name */
+SELECT PAYMENT_REFERENCE_NUMBER
+  FROM IBY_PAYMENTS_ALL
+ WHERE PAYMENT_PROCESS_REQUEST_NAME IN ('13 08 24 (3)')
+
 --################# Payment Batch error with inorrect bank Acount ###################
 
 /* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
