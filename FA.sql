@@ -29,3 +29,7 @@ BEGIN
    
     end loop;
 END;
+
+
+
+select apps.xxtg_fa_asset_number_s.nextval from dual;
