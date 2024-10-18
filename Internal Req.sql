@@ -212,3 +212,39 @@ UPDATE po.PO_REQUISITION_LINES_all
  WHERE REQUISITION_HEADER_ID IN (SELECT REQUISITION_HEADER_ID
                                    FROM PO.PO_REQUISITION_HEADERwaS_all
                                   WHERE SEGMENT1 IN (102236))
+
+/* 1 Find all IR by IR_TYPE betwen date*/
+  SELECT RH.segment1,
+         RL.LINE_NUM,
+         (SELECT DISTINCT SEGMENT1
+            FROM inv.mtl_system_items_b a
+           WHERE a.INVENTORY_ITEM_ID = RL.ITEM_ID)    AS "Item",
+         RL.ITEM_DESCRIPTION,
+         QUANTITY,
+         UNIT_PRICE,
+         SOURCE_SUBINVENTORY                          AS "FROM SUB",
+         DESTINATION_SUBINVENTORY                     AS "TO SUB"
+    FROM PO_REQUISITION_HEADERS_ALL RH, PO_REQUISITION_LINES_ALL RL
+   WHERE     1 = 1
+         --segment1 IN ('143594')
+         AND RH.REQUISITION_HEADER_ID = RL.REQUISITION_HEADER_ID
+         AND RH.ATTRIBUTE_CATEGORY = 'INTERNAL'
+         AND RH.ATTRIBUTE1 = 'MOVE_FROM_FLGn_TO_FLGnx'
+         AND RH.AUTHORIZATION_STATUS = 'APPROVED'
+         AND RL.CREATION_DATE BETWEEN TO_DATE ('01.01.2024', 'dd.mm.yyyy')
+                                  AND TO_DATE ('19.09.2024', 'dd.mm.yyyy')
+--                                  GROUP BY                                  RH.segment1,RL.LINE_NUM ,RL.ITEM_ID, RL.ITEM_DESCRIPTION,QUANTITY,UNIT_PRICE,SOURCE_SUBINVENTORY,DESTINATION_SUBINVENTORY
+ORDER BY 1, 2
+
+                         
+/* 2 Find all IR + SUM_QUANTITY by IR_TYPE betwen date*/
+  SELECT RH.segment1 AS "Internal Req", SUM (RL.QUANTITY) ALL_QUANTITY
+    FROM PO_REQUISITION_HEADERS_ALL RH, PO_REQUISITION_LINES_ALL RL
+   WHERE     RH.REQUISITION_HEADER_ID = RL.REQUISITION_HEADER_ID
+         AND RH.ATTRIBUTE_CATEGORY = 'INTERNAL'
+         AND RH.ATTRIBUTE1 = 'MOVE_FROM_FLGn_TO_FLGnx'
+         AND RH.AUTHORIZATION_STATUS = 'APPROVED'
+         AND RL.CREATION_DATE BETWEEN TO_DATE ('01.01.2024', 'dd.mm.yyyy')
+                                  AND TO_DATE ('19.09.2024', 'dd.mm.yyyy')
+GROUP BY RH.segment1
+ORDER BY 1

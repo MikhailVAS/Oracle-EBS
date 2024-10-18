@@ -468,7 +468,7 @@ where 1=1
     --                                        WHERE fu.user_id = efs.CREATED_BY)
     --                 AND ROWNUM = 1)
     --             AS "eFirm CREATED_BY"
-    FROM xxtg_ef_suppliers efs
+    hpFROM xxtg_ef_suppliers efs
          LEFT JOIN ap.ap_suppliers aps ON aps.VENDOR_ID = efs.VENDOR_ID
          LEFT JOIN APPS.ar_customers ars ON ars.CUSTOMER_NAME = aps.VENDOR_NAME
          LEFT JOIN inv.MTL_SECONDARY_INVENTORIES MSI
@@ -500,7 +500,7 @@ SELECT DISTINCT pv.VENDOR_ID,
        ap_terms_tl              terms,
        po_vendors               parent1,
        per_employees_current_x  emp,
-       hz_parties               hp,
+       hz_parties               ,
        AP_INCOME_TAX_TYPES      aptt,
        per_all_people_f         papf
  WHERE     1 = 1
@@ -634,3 +634,61 @@ SELECT DISTINCT pv.VENDOR_ID,
                                                             ) QRSLT
 ORDER BY QRSLT.VENDOR_NAME ASC
 
+/* Find all info eFirma supplire for NTM*/
+SELECT DISTINCT
+       aps.VENDOR_ID,
+       aps.VENDOR_NAME,
+       aps.VAT_REGISTRATION_NUM,
+       ssa.COUNTRY,
+       ssa.STATE,
+       ssa.CITY,
+       ssa.ADDRESS_LINE1,
+       ssa.ADDRESS_LINE2,
+       PERSON_LAST_NAME,
+       PERSON_FIRST_NAME,
+       PERSON_MIDDLE_NAME,
+       esc.PHONE_COUNTRY_CODE
+       || ' ('
+       || esc.PHONE_AREA_CODE
+       || ') '
+       || esc.PHONE_NUMBER    AS "PHONE"
+  FROM ap.ap_suppliers  aps
+       LEFT JOIN xxtg_ef_supplier_contacts_v esc
+           ON esc.vendor_id = aps.vendor_id
+       LEFT JOIN AP_SUPPLIER_SITES_ALL ssa ON ssa.vendor_id = aps.vendor_id
+ WHERE 1=1 
+ -- AND aps.VENDOR_NAME LIKE '%ЛУКОЙЛ%' 
+--  AND aps.TCA_SYNC_VAT_REG_NUM IN ('100126124',
+--                              '100183195',
+--                              '790444462',
+--                              '190513391',
+--                              '290952413')
+                              ORDER BY 2
+
+/* Find all sales point by supplier */
+SELECT DISTINCT SM.DEALER_CODE,
+                SM.DEALER_NAME,
+                SM.SALEPOINT_CODE,
+                sm.SALEPOINT_ADDRESS,
+                DL.LEGAL_ADDRESS                                   --,   hzl.*
+                                ,
+                hzl.location_id,
+                hzl.county,
+                hzl.ADDRESS1,
+                hzl.ADDRESS2,
+                hzl.ADDRESS3
+  FROM sm.sfa_tradepoints_tmp@sm_deepdb.best.local  SM,
+       XXTG_DEALER_LIST_V                           DL,
+       apps.hz_cust_accounts                        hza,
+       hz_cust_acct_sites_all                       cas,
+       hz_cust_site_uses_all                        csu,
+       hz_party_sites                               ps,
+       AR.HZ_LOCATIONS                              hzl
+ WHERE     LOWER (sm.DEALER_CODE) = LOWER (DL.DEALER_CODE)
+       AND hza.cust_account_id = dl.dealer_id
+       AND hza.cust_account_id = cas.cust_account_id
+       AND ps.party_site_id = cas.party_site_id
+       AND ps.location_id = hzl.location_id
+       AND cas.cust_acct_site_id = csu.cust_acct_site_id
+       AND csu.site_use_code = 'SHIP_TO'
+       AND SM.DEALER_NAME LIKE '%ТИБЕР%'

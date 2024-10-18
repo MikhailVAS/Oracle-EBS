@@ -17,6 +17,16 @@ SELECT HDR.*
          AND fu.EMPLOYEE_ID = usr.PERSON_ID
 --         AND atr.HEADER_ID = P_HEADER_ID;
 
+/* Find Item not assigned organization by ID Item Creation Form*/
+SELECT SEGMENT1, COUNT(ORGANIZATION_ID)
+  FROM inv.mtl_system_items_b
+ WHERE SEGMENT1 IN
+           (SELECT HDR.ITEM_CODE
+             FROM XXTG_ITEM_CREATION_HDR HDR, XXTG_ITEM_CREATION_ATTR_VAL ATR
+            WHERE HDR.HEADER_ID = ATR.HEADER_ID AND HDR.FILE_ID = '1006561')
+GROUP BY SEGMENT1
+HAVING COUNT(ORGANIZATION_ID) < 6;
+
 /* Item Creation from ORG Assigment */
 DECLARE
     p_item_id            NUMBER := 1033848;
