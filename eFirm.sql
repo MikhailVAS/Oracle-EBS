@@ -415,6 +415,16 @@ where 1=1
   and p.party_id = ca.party_id
   and p.TAX_REFERENCE = '192817982';
 
+  /* Sale Customer Find adress site */
+SELECT *
+  FROM hz_cust_acct_sites_all
+ WHERE CUST_ACCOUNT_ID = 380440 AND CUST_ACCT_SITE_ID = 55156 -- Account Site Details Reference in Web Form
+  
+/* Activate Sale Customer  adress site  */
+UPDATE hz_cust_acct_sites_all
+   SET STATUS = 'A'
+ WHERE CUST_ACCOUNT_ID = 380440 AND CUST_ACCT_SITE_ID = 55156 -- Account Site Details Reference in Web Form
+
 
   /* All suppliers and cotrcat  with terms */
   SELECT DISTINCT

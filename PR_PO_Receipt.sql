@@ -1564,6 +1564,19 @@ UPDATE PO.po_headers_all
        RATE_TYPE = 'Spot'
 WHERE segment1 IN ('53355')
 
+/* Update currency rate in PO by item */
+UPDATE PO.po_distributions_all
+   SET RATE_DATE = TO_DATE ('24.10.2024', 'dd.mm.yyyy'), RATE = 3.2718
+ WHERE PO_LINE_ID IN
+           (SELECT PO_LINE_ID
+              FROM po_lines_all
+             WHERE     PO_HEADER_ID = (SELECT PO_HEADER_ID
+                                         FROM PO.po_headers_all
+                                        WHERE segment1 IN ('57289'))
+                   AND ITEM_ID IN (SELECT DISTINCT INVENTORY_ITEM_ID
+                                     FROM inv.mtl_system_items_b a
+                                    WHERE SEGMENT1 IN ('3705081190')))
+
 /* Formatted on (QP5 v5.388) Service Desk 727299 Mihail.Vasiljev */
 UPDATE PO.po_distributions_all
    SET RATE_DATE = TO_DATE ('09.11.2023', 'dd.mm.yyyy'), RATE = 3.4166
@@ -2878,7 +2891,7 @@ SELECT DISTINCT
            AS "VENDOR NAME IN eFirm",
        SUP.VAT_REGISTRATION_NUM
            AS "VRN(УНП) IN eFirm",
-       SUP.START_DATE_ACTIVE
+       SUP.START_DATE_ACTIV
            AS "START DATE IN eFirm",
        SUP.END_DATE_ACTIVE
            AS "END DATE IN eFirm",
