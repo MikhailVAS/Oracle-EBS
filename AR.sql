@@ -205,5 +205,16 @@ UPDATE HZ_CUST_ACCT_SITES_ALL
    SET STATUS = 'A'
  WHERE PARTY_SITE_ID = '697808'
 
+ /* Update contaract in AR Transactions*/
+UPDATE RA_CUSTOMER_TRX_ALL
+   SET ATTRIBUTE2 =
+           (SELECT INVOICE_TYPE_ID
+              FROM XXTG.XXTG_EF_INVOICE_TYPE
+             WHERE PROCESS = 'AR' AND INVOICE_TYPE_DETAIL = '893-141/ДА')
+ WHERE TRX_NUMBER IN ('РЖ 1373240',
+                      'РЖ 1373435',
+                      'РЖ 1373510',
+                      'РЖ 1373590')
+
        
        

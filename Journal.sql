@@ -1,3 +1,23 @@
+/* GL Journals NOT EXISTS IN DG*/
+
+/* Find All manual Journal without DG accounting*/
+SELECT *
+  --DISTINCT JE_HEADER_ID
+  FROM gl_je_headers
+ WHERE    PERIOD_NAME in('MAY-24','JUN-24','JUL-24','AUG-24','SEP-24') 
+       AND NOT EXISTS
+               (SELECT d_doc_id
+                  FROM XXTG_GL001_DOUBLE_GLOBAL dg1
+                 WHERE     D_ACCOUNTING_DATE BETWEEN TO_DATE ('01.05.2024',
+                                                              'dd.mm.yyyy')
+                                                 AND TO_DATE ('30.09.2024',
+                                                              'dd.mm.yyyy')
+                       AND D_APPL_ID = 101
+                       AND je_header_id = d_doc_id)
+       AND JE_SOURCE = 'Manual'
+       AND RUNNING_TOTAL_ACCOUNTED_DR != 0
+       AND RUNNING_TOTAL_ACCOUNTED_CR != 0
+
 /* Find all similar manual journals for February and get JE_HEADER_ID to check in double_global */
   SELECT GJH.CREATED_BY,
          GJH.JE_HEADER_ID,
