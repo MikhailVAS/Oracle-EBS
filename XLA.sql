@@ -540,13 +540,15 @@ UPDATE xla.xla_events
                    AND SOURCE_ID_INT_1 = '1217238'               -- Invoice ID
                                                   ))
 
+/* Formatted on (QP5 v5.388) Service Desk 854180 Mihail.Vasiljev */
 /* 1 Final acc Payment - Do not reformat accounting in the future */
 UPDATE xla_events
    SET EVENT_STATUS_CODE = 'P', PROCESS_STATUS_CODE = 'P'                --U D
  WHERE ENTITY_ID IN
            (SELECT ENTITY_ID
              FROM xla.xla_transaction_entities
-            WHERE ENTITY_CODE = 'AP_PAYMENTS' AND SOURCE_ID_INT_1 = '616904') -- Payment Num
+            WHERE ENTITY_CODE = 'AP_PAYMENTS' AND TRANSACTION_NUMBER in ('643855',
+'643855')) -- Payment Num
 
 /* 2 Final acc Payment - Do not reformat accounting in the future */
 UPDATE xla_ae_headers h
@@ -555,7 +557,9 @@ UPDATE xla_ae_headers h
  WHERE ENTITY_ID IN
            (SELECT ENTITY_ID
              FROM xla.xla_transaction_entities
-            WHERE ENTITY_CODE = 'AP_PAYMENTS' AND SOURCE_ID_INT_1 = '616904') -- Payment Num
+            WHERE ENTITY_CODE = 'AP_PAYMENTS' AND TRANSACTION_NUMBER in ('643855',
+'643855')) -- Payment Num
+
 
 -- XLA AP Invoice in xla_events
 SELECT a.*

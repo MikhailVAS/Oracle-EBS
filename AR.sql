@@ -100,6 +100,15 @@ SELECT app.amount_applied_from, app.*
 UPDATE ar_receivable_applications_all
    SET AMOUNT_APPLIED = 0.01
  WHERE RECEIVABLE_APPLICATION_ID = 2584118;
+/* Correction update ora-01476 divisor is equal to zero*/
+ SELECT AMOUNT_APPLIED, ACCTD_AMOUNT_APPLIED_FROM, ACCTD_AMOUNT_APPLIED_TO
+  FROM AR_RECEIVABLE_APPLICATIONS_ALL
+ WHERE RECEIVABLE_APPLICATION_ID = '2942615'
+
+/* Correction update ora-01476 divisor is equal to zero*/
+UPDATE ar_receivable_applications_all
+   SET AMOUNT_APPLIED = 0.01, ACCTD_AMOUNT_APPLIED_TO = 0.01
+ WHERE RECEIVABLE_APPLICATION_ID = 2942615;
 
 /* Finde  AR customet site adress*/
     SELECT hps.*
@@ -211,7 +220,8 @@ UPDATE RA_CUSTOMER_TRX_ALL
            (SELECT INVOICE_TYPE_ID
               FROM XXTG.XXTG_EF_INVOICE_TYPE
              WHERE PROCESS = 'AR' AND INVOICE_TYPE_DETAIL = '893-141/ДА')
- WHERE TRX_NUMBER IN ('РЖ 1373240',
+ WHERE ATTRIBUTE2 IS NULL 
+   AND TRX_NUMBER IN ('РЖ 1373240',
                       'РЖ 1373435',
                       'РЖ 1373510',
                       'РЖ 1373590')

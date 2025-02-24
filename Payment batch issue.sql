@@ -155,3 +155,34 @@ update AP_SCHEDULED_PAYMENTS_ALL set Checkrun_ID = NULL where Checkrun_ID = 'You
 Update AP_INV_SELECTION_CRITERIA_ALL set Status = 'CANCELED' where Checkrun_name = 'Your PPR Name'
 
 --Now check the status of the invoices....
+
+
+/* 1 Final acc Payment - Do not reformat accounting in the future */
+UPDATE xla_events
+   SET EVENT_STATUS_CODE = 'P', PROCESS_STATUS_CODE = 'P'                --U D
+ WHERE ENTITY_ID IN
+           (SELECT ENTITY_ID
+             FROM xla.xla_transaction_entities
+            WHERE ENTITY_CODE = 'AP_PAYMENTS' AND SOURCE_ID_INT_1 = '635488') -- Payment Num
+           
+
+/* 2 Final acc Payment - Do not reformat accounting in the future */
+UPDATE xla_ae_headers h
+   SET ACCOUNTING_ENTRY_STATUS_CODE = 'F'-- D
+       , FUNDS_STATUS_CODE = 'S'         -- null
+ WHERE ENTITY_ID IN
+           (SELECT ENTITY_ID
+             FROM xla.xla_transaction_entities
+            WHERE ENTITY_CODE = 'AP_PAYMENTS' AND SOURCE_ID_INT_1 = '635488') -- Payment Num
+            
+DELETE FROM  xxtg.xxtg_gl001_double_global
+ WHERE     (C_DOC_NUM IN ('635488') OR d_DOC_NUM IN ('635488')) -- PaymentNum
+       AND D_ENTITY_CODE = 'AP_PAYMENTS'
+       AND ACCOUNTED_AMOUNT = 0.01
+--       AND DOUBLE_GLOBAL_ID = 400453534;
+
+UPDATE xxtg.xxtg_gl001_double_global
+   SET ACCOUNTED_AMOUNT = 6347.32
+ WHERE     (C_DOC_NUM IN ('635488') OR d_DOC_NUM IN ('635488'))  -- PaymentNum
+       AND D_ENTITY_CODE = 'AP_PAYMENTS'
+       AND ACCOUNTED_AMOUNT = 6347.31
