@@ -115,6 +115,21 @@ UPDATE APPS.PO_LINE_LOCATIONS_all
  WHERE po_HEADER_ID IN (SELECT po_header_id
                           FROM PO.po_headers_all
                          WHERE segment1 IN ('43220')); -- Number PO
+                         
+/*Update need by date in  PO by PO and Line num*/
+UPDATE APPS.PO_LINE_LOCATIONS_all
+   SET NEED_BY_DATE =
+           TO_DATE ('31.12.2026 23:59:00', 'dd-mm-yyyy hh24:mi:ss')
+ WHERE     po_HEADER_ID IN (SELECT po_header_id
+                              FROM PO.po_headers_all
+                             WHERE segment1 IN ('59504'))
+       AND po_line_id =
+           (SELECT pol.po_line_id
+              FROM po_lines_all pol
+             WHERE     pol.po_header_id = (SELECT po_header_id
+                                             FROM PO.po_headers_all
+                                            WHERE segment1 IN ('59504'))
+                   AND LINE_NUM = '28')
                         
 /* Update date in Receipt*/
 UPDATE  PO.RCV_TRANSACTIONS
