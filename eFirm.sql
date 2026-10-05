@@ -34,11 +34,42 @@ SELECT aps.VENDOR_ID,
        --AND VENDOR_NAME like 'Навиком%'   --- 104409
 
 
+   SELECT    'update AR.HZ_LOCATIONS h set address1='''
+       || h.address1
+       || ''' where location_ID='
+       || h.LOCATION_ID
+       || ';'    upd,
+       location_ID,
+       address1,
+       g.FULLADDRESS
+  FROM AR.HZ_LOCATIONS  h
+       JOIN MAG_SC_EXTRACT.XXTG_SALEPOINTS_ADDRESS g
+           ON salesPointCode = county AND address1 <> g.FULLADDRESS
+ WHERE REGEXP_LIKE (county, '^[0-9]');
+
+ /* Change Lastname in suppliers Service Desk 948239  Mihail.Vasiljev */
+UPDATE ap.ap_suppliers
+   SET VENDOR_NAME = 'Валентина Шавырова', -- Короткин, Виктор Витальевич
+       TCA_SYNC_VENDOR_NAME = 'Валентина Шавырова' -- Виктор Короткин
+ WHERE     VENDOR_NAME =
+           'Валентина Лиходедова'
+       AND END_DATE_ACTIVE IS NULL
+       
+       SELECT hp.party_name AS tca_party_name,
+       aps.vendor_name AS ap_supplier_name,
+       aps.party_id
+FROM   hz_parties hp,
+       ap_suppliers aps
+WHERE  hp.party_id = aps.party_id
+AND  PARTY_NAME LIKE '%Виктор Короткин%' ;
+
+
 
   SELECT DISTINCT *
             FROM XXTG.xxtg_ef_suppliers xes, XXTG.xxtg_ef_status xest
            WHERE     TAX_REFERENCE in ('191041473', '101386085','193197348')--asu.vendor_id(+) = xest.vendor_id
                   AND xest.ef_id = xes.ef_id(+)	   
+                  
 /* Типы счет-фактур AP в eFirme*/
 SELECT *
   FROM XXTG.XXTG_EF_INVOICE_TYPE 
@@ -47,6 +78,73 @@ SELECT *
            (SELECT VENDOR_ID
               FROM ap.ap_suppliers
              WHERE VENDOR_NAME LIKE 'МПОВТ ОАО%')
+
+/* NEW Insert AR contract*/
+INSERT INTO XXTG.XXTG_EF_INVOICE_TYPE (INVOICE_TYPE_ID,
+                                       PROCESS,
+                                       VENDOR_ID,
+                                       INVOICE_TYPE,
+                                       INVOICE_TYPE_DETAIL,
+                                       PAYMENT_TERM,
+                                       START_DATE,
+                                       ENABLED_FLAG,
+                                       CREATION_DATE,
+                                       CREATED_BY,
+                                       LAST_UPDATE_DATE,
+                                       LAST_UPDATED_BY,
+                                       LAST_UPDATE_LOGIN,
+                                       CORPORATE)
+         VALUES (
+                    XXTG_INVOICE_TYPE_ID_S.nextval,
+                    'AR',
+                    (SELECT VENDOR_ID
+                      FROM AP_SUPPLIERS
+                     WHERE VENDOR_NAME LIKE
+                               '%Кононов, Сергей Александрович%'
+                                AND END_DATE_ACTIVE IS NULL),
+                    '2292',
+                    'бн от 21.10.2025',
+                    '5',
+                    TO_DATE ('2/1/2025', 'MM/DD/YYYY'),
+                    'Y',
+                    TO_DATE ('3/4/2025 9:44:07 AM', 'MM/DD/YYYY HH:MI:SS AM'),
+                    8078,
+                    TO_DATE ('3/4/2025 9:44:07 AM', 'MM/DD/YYYY HH:MI:SS AM'),
+                    8078,
+                    34086184,
+                    'N');
+
+/* OLD Insert AR contract*/
+INSERT INTO XXTG.XXTG_EF_INVOICE_TYPE (INVOICE_TYPE_ID,
+                                       PROCESS,
+                                       VENDOR_ID,
+                                       INVOICE_TYPE,
+                                       INVOICE_TYPE_DETAIL,
+                                       PAYMENT_TERM,
+                                       START_DATE,
+                                       ENABLED_FLAG,
+                                       CREATION_DATE,
+                                       CREATED_BY,
+                                       LAST_UPDATE_DATE,
+                                       LAST_UPDATED_BY,
+                                       LAST_UPDATE_LOGIN,
+                                       CORPORATE)
+     VALUES ((SELECT MAX (INVOICE_TYPE_ID) + 1 FROM XXTG_EF_INVOICE_TYPE),
+             'AR',
+             (SELECT vendor_id
+                FROM xxtg.xxtg_ef_suppliers
+               WHERE vendor_name LIKE '%Шпетная%'),
+             '2292',
+             'бн',
+             '5',
+             TO_DATE ('2/1/2025', 'MM/DD/YYYY'),
+             'Y',
+             TO_DATE ('3/4/2025 9:44:07 AM', 'MM/DD/YYYY HH:MI:SS AM'),
+             8078,
+             TO_DATE ('3/4/2025 9:44:07 AM', 'MM/DD/YYYY HH:MI:SS AM'),
+             8078,
+             34086184,
+             'N');
 			 
 /* Find  AP Invoice Type by nymber*/
 SELECT (SELECT sup.VENDOR_NAME
@@ -115,7 +213,11 @@ ORDER BY 1 DESC
 /* Недоступна кнопка Update или в статусе "Wait for Approwal" */
 UPDATE APPS.xxtg_ef_status
    SET status = 'PROCESSED'
- WHERE vendor_id = 116211 AND status <> 'PROCESSED' 
+ WHERE     VENDOR_ID =
+           (SELECT VENDOR_ID
+              FROM ap.ap_suppliers
+             WHERE VENDOR_NAME LIKE 'ФИРМА АВС ПЛЮС ООО')
+       AND status <> 'PROCESSED'
 
 --IN PROCESS
 --REJECTED
@@ -702,3 +804,37 @@ SELECT DISTINCT SM.DEALER_CODE,
        AND cas.cust_acct_site_id = csu.cust_acct_site_id
        AND csu.site_use_code = 'SHIP_TO'
        AND SM.DEALER_NAME LIKE '%ТИБЕР%'
+
+
+ /* 1 ORA-00001: unique constraint (XXTG.XXTG_EF_INVOICE_TYPE_U1) violated */
+SELECT *
+  FROM xxtg_ef_invoice_type_temp
+ WHERE ITEM_KEY = '271532-20250402050450'
+
+
+SELECT VENDOR_ID,VENDOR_NAME,VAT_REGISTRATION_NUM
+  FROM ap_suppliers
+ WHERE  VENDOR_ID = '11087'
+ 
+/* Недоступна кнопка Update или в статусе "Wait for Approwal" */
+UPDATE APPS.xxtg_ef_status
+   SET status = 'PROCESSED'
+ WHERE vendor_id = 11087 AND status <> 'PROCESSED' 
+
+
+/* 2 ORA-00001: unique constraint (XXTG.XXTG_EF_INVOICE_TYPE_U1) violated */
+UPDATE xxtg_ef_invoice_type_temp
+   SET INVOICE_TYPE_ID =
+           (SELECT MAX (INVOICE_TYPE_ID) + 1 FROM xxtg_ef_invoice_type_temp)
+ WHERE     INVOICE_TYPE_DETAIL = 'Решение 1151 от 27.03.25'
+       AND ITEM_KEY = '271532-20250402050450'
+
+/* Formatted on 9/16/2026 7:34:02 PM (QP5 v5.388) Service Desk 959331 Mihail.Vasiljev */
+UPDATE ap.ap_suppliers
+   SET VENDOR_NAME = 'Коваль, Алёна Сергеевна',                     -- Воронцова, Алёна Сергеевна
+       TCA_SYNC_VENDOR_NAME =
+           (SELECT PARTY_NAME
+              FROM HZ_PARTIES
+             WHERE PARTY_NAME LIKE '%Алёна%Коваль%')            -- Воронцова, Алёна Сергеевна
+ WHERE     VENDOR_NAME = 'Воронцова, Алёна Сергеевна'
+       AND END_DATE_ACTIVE IS NULL

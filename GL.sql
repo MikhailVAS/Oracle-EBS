@@ -6,6 +6,9 @@ SELECT *
                                AND TO_DATE ('31.05.2024', 'dd.mm.yyyy')
                                AND (ENTERED_DR = 973.12 OR ENTERED_CR = 973.12)
                                OR (ENTERED_DR = 785.84 OR ENTERED_CR = 785.84)
+
+SELECT * FROM    GL_JE_LINES WHERE JE_HEADER_ID = '9485129'
+AND JE_LINE_NUM > 10
                                
                                
 /* Formatted on 6/28/2024 2:38:45 PM (QP5 v5.388) Service Desk  Mihail.Vasiljev */

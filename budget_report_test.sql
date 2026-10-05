@@ -188,7 +188,7 @@ select * from XXTG_BUDGET_REP_EXT_DATA WHERE DOC_NUMBER = '84141'
                  AND POH.CREATED_BY = FU.USER_ID
                  AND POH.VENDOR_ID = VEN.VENDOR_ID(+)
                  AND (EXTRACT(YEAR FROM PLL.NEED_BY_DATE) = L_YEAR
-                        OR exists   --проверяем, что PO использовался позднее в поступлении с датой в диапазоне отчета
+                        OR exists   --пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ PO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                         (SELECT 1 
                              FROM po_line_locations_all      plla
                                   ,po_distributions_all       pda
@@ -198,7 +198,7 @@ select * from XXTG_BUDGET_REP_EXT_DATA WHERE DOC_NUMBER = '84141'
                               AND plla.line_location_id = pda.line_location_id 
                               AND  rcv.po_distribution_id = pda.po_distribution_id
                               AND (EXTRACT(YEAR FROM rcv.transaction_date) = L_YEAR))
-                    OR exists   --проверяем, что PO использовался позднее в КСФ с датой в диапазоне отчета
+                    OR exists   --пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ PO пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                         (SELECT 1 
                              FROM po_line_locations_all      plla
                                   ,po_distributions_all       pda

@@ -109,3 +109,34 @@ UPDATE XXTG_FA_MOVES_HDR
    SET REQUEST_NUMBER = 'БТ 0013889'
  WHERE TTN_NUMBER = 'БС №1668 Подряд'
  AND HEADER_ID = '4416'
+
+ /* Trip Stop details*/
+SELECT dd.*
+  FROM wsh_delivery_details        dd,
+       wsh_delivery_assignments_v  da,
+       wsh_delivery_legs           dg,
+       wsh_new_deliveries          dl,
+       wsh_trip_stops              st,
+       wsh_trips                   tr,
+       wsh_carriers                wcv,
+       wsh_delivery_details        dd1,
+       wsh_delivery_assignments_v  da1
+ WHERE     st.stop_id = dg.pick_up_stop_id
+       AND st.batch_id = '244298'                                 --p_batch_id
+       AND st.stop_location_id = dl.initial_pickup_location_id
+       AND dg.delivery_id = dl.delivery_id
+       AND da.delivery_id = dl.delivery_id
+       AND dd.delivery_detail_id = da.delivery_detail_id
+       AND st.trip_id = tr.trip_id
+       AND dd.container_flag = 'N'
+       AND dd.inv_interfaced_flag = 'N'
+       AND dd.released_status <> 'D'
+       AND NVL (dd.line_direction, 'O') IN ('O', 'IO')
+       AND tr.carrier_id = wcv.carrier_id(+)
+       AND dd.delivery_detail_id = da1.delivery_detail_id
+       AND da1.parent_delivery_detail_id = dd1.delivery_detail_id(+)
+
+/* Incorrect Ship Confirm by No Serial Item */
+UPDATE wsh_delivery_details
+   SET TRANSACTION_TEMP_ID = NULL                                  -- 56317474
+ WHERE DELIVERY_DETAIL_ID = '842902'

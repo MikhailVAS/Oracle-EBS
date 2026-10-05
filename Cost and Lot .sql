@@ -103,7 +103,7 @@ UPDATE BOM.CST_INV_LAYERS a
                        inv.mtl_system_items_b           msib
                  WHERE     1 = 1
                        AND cil.create_transaction_id = mt.transaction_id
-                       AND cil.organization_id = mt.organization_id
+                  AND cil.organization_id = mt.organization_id
                        AND cil.inventory_item_id = mt.inventory_item_id
                        AND msib.inventory_item_id = cil.inventory_item_id
                        AND mt.transaction_quantity >= 0
@@ -341,3 +341,118 @@ BEGIN
         COMMIT;
     END LOOP;
 END;
+
+
+/*Mass Add Unit Cost by Lot Number*/
+DECLARE
+BEGIN
+    FOR r IN (SELECT DISTINCT lot_number
+                FROM mtl_transaction_lot_numbers
+               WHERE   lot_number BETWEEN '16832' AND '16981'
+                     AND NOT EXISTS
+                             (SELECT *
+                                FROM XXTG.xxtg_unit_cost
+                               WHERE lot_number BETWEEN '16832' AND '16981'))
+    LOOP
+        INSERT INTO XXTG.XXTG_UNIT_COST (UNIT_COST_ID,
+                                         INVENTORY_ITEM_ID,
+                                         LOT_NUMBER,
+                                         UNIT_COST,
+                                         CURRENCY_CODE,
+                                         MODE#,
+                                         DATE_FROM,
+                                         DATE_TO,
+                                         INV_LAYER_ID,
+                                         CREATION_DATE,
+                                         FIRST_TRANSACTION_DATE,
+                                         CREATE_TRANSACTION_ID,
+                                         DATE_OF_CHANGE)
+                 VALUES (
+                            (SELECT MAX (UNIT_COST_ID + 1)
+                               FROM XXTG_UNIT_COST),
+                            1149996,
+                            r.lot_number,
+                            0.66,
+                            'BYN',
+                            0,
+                            TO_DATE ('7/1/2016', 'MM/DD/YYYY'),
+                            TO_DATE ('1/1/2100', 'MM/DD/YYYY'),
+                            2405905,
+                            TO_DATE ('7/9/2025 1:31:38 PM',
+                                     'MM/DD/YYYY HH:MI:SS AM'),
+                            TO_DATE ('7/9/2025', 'MM/DD/YYYY'),
+                            55212531,
+                            TO_DATE ('7/9/2025 1:31:38 PM',
+                                     'MM/DD/YYYY HH:MI:SS AM'));
+
+        DBMS_OUTPUT.put_line ('XXTG_UNIT_COST Add for :' || r.lot_number);
+        COMMIT;
+    END LOOP;
+END;
+
+
+/*960949 Прошу подтянуть дату поступления в организацию BBW Партий.*/
+SELECT DISTINCT
+       SUBINVENTORY_CODE,
+       LOT_NUMBER,
+       TO_CHAR (TRUNC (mt.TRANSACTION_DATE), 'dd.mm.yyyy')
+           TRANSACTION_DATE,
+       SHIPMENT_NUMBER
+  FROM inv.mtl_transaction_lot_numbers  mtlnn,
+       inv.mtl_material_transactions    mt
+ WHERE     mtlnn.transaction_id = mt.transaction_id
+       AND mtlnn.LOT_NUMBER IN
+               ('241120Демонтаж009952',
+                '241120Демонтаж009953',
+                'Ремонт31/07/2017_ЗАО_"Бе061618')
+       AND mt.SUBINVENTORY_CODE = 'ZarSpareNo'
+       AND mt.TRANSACTION_QUANTITY > 0
+
+WITH ranked_receipts AS (
+    SELECT 
+        msi.segment1 AS item_number,
+        msi.description AS item_description,
+        mtln.lot_number,
+        mmt.transaction_id,
+        mmt.SUBINVENTORY_CODE,
+         TO_CHAR (TRUNC (mmt.TRANSACTION_DATE), 'dd.mm.yyyy') TRANSACTION_DATE,
+--        mmt.transaction_date,
+        mmt.transaction_quantity,
+        mmt.transaction_uom,
+        mtt.transaction_type_name,
+        -- Ранжируем транзакции по дате внутри каждой партии
+        ROW_NUMBER() OVER (
+            PARTITION BY mmt.inventory_item_id, mtln.lot_number 
+            ORDER BY mmt.transaction_date ASC, mmt.transaction_id ASC
+        ) AS rn
+    FROM 
+        apps.mtl_material_transactions mmt
+    JOIN 
+        apps.mtl_transaction_lot_numbers mtln ON mmt.transaction_id = mtln.transaction_id
+    JOIN 
+        apps.mtl_system_items_b msi ON mmt.inventory_item_id = msi.inventory_item_id 
+                                   AND mmt.organization_id = msi.organization_id
+    JOIN 
+        apps.mtl_transaction_types mtt ON mmt.transaction_type_id = mtt.transaction_type_id
+    WHERE 
+        mtln.lot_number IN ('260825Демонтаж028048',
+'200812Демонтаж417521')
+AND mmt.ORGANIZATION_ID = '83'
+        -- Опционально: фильтр только по приходным типам транзакций (например, PO Receipt, Account Receipt)
+        -- AND mtt.transaction_action_id IN (1, 27, 29, 31) 
+)
+SELECT 
+    item_number,
+    item_description,
+    lot_number,
+    transaction_id,
+    SUBINVENTORY_CODE,
+    transaction_date,
+    transaction_quantity,
+    transaction_uom,
+    transaction_type_name
+FROM 
+    ranked_receipts
+WHERE 
+    rn = 1;
+    

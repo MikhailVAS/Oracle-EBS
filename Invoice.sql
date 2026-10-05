@@ -223,7 +223,33 @@ SELECT r.DOC_SEQUENCE_VALUE, r.*
   FROM RA_CUSTOMER_TRX_ALL r
  WHERE r.TRX_NUMBER IN ('УН 0472857', '220003361');
 
+/*################################################################## */
+ update RA_CUSTOMER_TRX_ALL
+set DOC_SEQUENCE_VALUE = ''
+--SELECT * FROM RA_CUSTOMER_TRX_ALL
+where CUSTOMER_TRX_ID in (
+        select trx.CUSTOMER_TRX_ID
+          from RA_CUSTOMER_TRX_ALL trx
+         where 1=1
+         and trx.TRX_DATE >= to_date('01092025', 'ddmmyyyy')
+         and trx.TRX_NUMBER in ('00000902292',
+'09_25/6440/23эс',
+'09_25/бн',
+'09_25/2336/22'
+));
+ 
+DELETE FROM  XXTG_EHSCHF_AR_INV where CUSTOMER_TRX_ID in (
+        select trx.CUSTOMER_TRX_ID
+          from RA_CUSTOMER_TRX_ALL trx
+         where 1=1
+         and trx.TRX_DATE >= to_date('01092025', 'ddmmyyyy')
+         and trx.TRX_NUMBER in ('00000902292',
+'09_25/бн_1',
+'09_25/1',
+'09_25-1/498/20/21',
+));
 
+/*################################################################## */
 DECLARE
 BEGIN
     FOR r

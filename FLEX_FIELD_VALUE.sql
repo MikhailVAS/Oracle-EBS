@@ -1,3 +1,49 @@
+/* Find Incorrect Budget Code*/
+  SELECT '''' || FLEX_VALUE || ''',', COUNT (1)
+    FROM XXTG_PR_BUDGET_ITEM_V
+GROUP BY FLEX_VALUE
+  HAVING COUNT (1) > 1
+
+/* Update to correct description in Cash Flow Budget Item */
+UPDATE FND_FLEX_VALUES_TL T
+   SET DESCRIPTION =
+              (SELECT DISTINCT DESCRIPTION
+                FROM fnd_flex_values ffv, fnd_flex_values_tl ffvt
+               WHERE     ffv.FLEX_VALUE = T.FLEX_VALUE_MEANING
+                     AND ffv.VALUE_CATEGORY = 'XXTG_BUDGET'
+                     AND ffv.flex_value_id = ffvt.flex_value_id
+                     AND ffvt.language = 'RU')-- RU US
+           || ' ('
+           || FLEX_VALUE_MEANING
+           || ')'
+ WHERE                                      --DESCRIPTION = 'Empty_Budget' AND
+           LANGUAGE = 'RU' -- RU US
+       AND FLEX_VALUE_ID IN
+               (SELECT FLEX_VALUE_ID
+                  FROM fnd_flex_values ffv
+                 WHERE     FLEX_VALUE IN ('760_02_2_3_04_13',
+                                          '760_02_3_7_01_00',
+                                          '760_04_01_01_00_00',
+                                          '760_04_01_07_00_00',
+                                          '760_04_01_08_00_00',
+                                          '770_07_99_08_01_00')
+                       AND VALUE_CATEGORY = 'XXTG_CASH_FLOW_BUDGET_ITEM')
+
+
+
+UPDATE FND_FLEX_VALUES_TL T
+   SET DESCRIPTION =
+              (SELECT DISTINCT DESCRIPTION
+                FROM fnd_flex_values ffv, fnd_flex_values_tl ffvt
+               WHERE     ffv.FLEX_VALUE = T.FLEX_VALUE_MEANING
+                     AND ffv.VALUE_CATEGORY = 'XXTG_BUDGET'
+                     AND ffv.flex_value_id = ffvt.flex_value_id
+                     AND ffvt.language = 'RU')
+           || ' ('
+           || FLEX_VALUE_MEANING
+           || ')'
+WHERE DESCRIPTION = 'Empty_Budget'
+
 /* Find all info in value set by value set name */
 SELECT ffvs.flex_value_set_id,
        ffvs.flex_value_set_name,
@@ -265,3 +311,26 @@ SELECT
                        flex_value_set_name))
        AND ffv.ATTRIBUTE1 IS NOT NULL
        AND ffv.END_DATE_ACTIVE IS NULL;
+
+select row_number() over(order by fvq.assignment_date, fvq.value_attribute_type) rn,
+           fvq.value_attribute_type,
+           vat.application_column_name,
+           vat.lookup_type,
+           0 application_id,
+           vat_tl.prompt
+     from fnd_flex_validation_qualifiers fvq
+     inner join fnd_value_attribute_types vat
+        on fvq.id_flex_application_id = vat.application_id
+       and fvq.id_flex_code = vat.id_flex_code
+       and fvq.segment_attribute_type = vat.segment_attribute_type
+       and fvq.value_attribute_type = vat.value_attribute_type
+      left join fnd_val_attribute_types_tl vat_tl
+        on fvq.id_flex_application_id = vat_tl.application_id
+       and fvq.id_flex_code = vat_tl.id_flex_code
+       and fvq.segment_attribute_type = vat_tl.segment_attribute_type
+       and fvq.value_attribute_type = vat_tl.value_attribute_type
+       and vat_tl.language = 'RU'
+     where fvq.flex_value_set_id = 1017615/*flex_value_set_name = l_value_set_name*/
+     order by fvq.flex_value_set_id,
+              fvq.assignment_date,
+              fvq.value_attribute_type

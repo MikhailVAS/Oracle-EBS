@@ -1,3 +1,12 @@
+/* Find PO by inventory receipt */
+SELECT DISTINCT (SELECT segment1
+                   FROM PO.po_headers_all PO
+                  WHERE PO.po_header_id = RT.po_header_id)    AS "PO"
+  FROM RCV_TRANSACTIONS RT
+ WHERE SHIPMENT_HEADER_ID = (SELECT SHIPMENT_HEADER_ID
+                               FROM PO.RCV_SHIPMENT_HEADERS
+                              WHERE receipt_num = 'ДУ 1073863')
+
 /* Find All PR-PO-Receipt for the period per employee */
 SELECT                                                                     --*
        (SELECT DISTINCT PRHA.SEGMENT1
@@ -90,6 +99,7 @@ SELECT segment1, attribute21, DESCRIPTION
 UPDATE inv.mtl_system_items_b
    SET attribute21 = 'N'
  WHERE segment1 IN ('3400000329')
+ 
 Find incorect amount in PO
  UPDATE PO.po_headers_all
    SET CREATION_DATE =
@@ -175,7 +185,15 @@ UPDATE PO.RCV_TRANSACTIONS
                                    PRLA.REQUISITION_LINE_ID
                                AND PRLA.REQUISITION_HEADER_ID =
                                    PRHA.REQUISITION_HEADER_ID
-                               AND PRHA.SEGMENT1 = 'PR'));  					 
+                               AND PRHA.SEGMENT1 = 'PR')); 
+
+
+UPDATE PO_LINES_ALL
+   SET UNIT_PRICE = 1
+ WHERE     PO_HEADER_ID IN (SELECT PO_HEADER_ID
+                              FROM po_headers_all
+                             WHERE TYPE_LOOKUP_CODE = 'BLANKET')
+       AND UNIT_PRICE = 0;			 
 						 
 /* PO */
 SELECT *
@@ -321,7 +339,7 @@ UPDATE po.po_distributions_all
                           FROM po.po_headers_all
                          WHERE segment1 IN ('36784'))
 	   
-/* Formatted on 9/2/2021 1:08:38 PM (QP5 v5.326) Service Desk  Mihail.Vasiljev */
+/* Formatted on (QP5 v5.326) Service Desk  Mihail.Vasiljev */
 /* Update budget code(ccid) in PO */
 UPDATE po.po_distributions_all
    SET code_combination_id =
@@ -333,7 +351,16 @@ UPDATE po.po_distributions_all
                           FROM po.po_headers_all
                          WHERE segment1 IN ('35488'))
 
-/* Formatted on 9/2/2021 1:08:38 PM (QP5 v5.326) Service Desk  Mihail.Vasiljev */						 
+/* Formatted on (QP5 v5.326) Service Desk  Mihail.Vasiljev */	
+/* Update budget code(ccid) in PR Headers*/
+UPDATE po.PO_REQUISITION_HEADERS_ALL
+   SET ATTRIBUTE9 =
+           (SELECT FLEX_VALUE_ID
+              FROM XXTG_PR_BUDGET_ITEM_V
+             WHERE FLEX_VALUE = '900_01_01_02_00_00')
+ WHERE segment1 IN ('158247')
+
+/* Formatted on (QP5 v5.326) Service Desk  Mihail.Vasiljev */					 
 /* Update budget code(ccid) in PR */
 UPDATE po.PO_REQ_DISTRIBUTIONS_ALL
    SET CODE_COMBINATION_ID =
@@ -498,6 +525,26 @@ SELECT *
        AND PDA.po_header_id IN (SELECT po_header_id
                                   FROM APPS.po_headers_all
                                  WHERE segment1 IN ('28827', '28849'))
+
+/* Chage item in PO  942430*/
+UPDATE po_lines_all
+   SET ITEM_ID = '1180142',
+       ITEM_DESCRIPTION =
+           'ПР наклейка самоклейка винил ЖД вокзал ФЛГ 1250х1920 мм'
+ WHERE     po_header_id IN (SELECT po_header_id
+                              FROM APPS.po_headers_all
+                             WHERE segment1 IN ('66653'))
+       AND LINE_NUM = 1
+                                 
+/* Chage item in PO  942430*/
+UPDATE po_lines_all
+   SET ITEM_ID = '1180126',
+       ITEM_DESCRIPTION =
+           'ПР наклейка самоклейка винил ЖД вокзал ФЛГ 2250х1920 мм'
+ WHERE     po_header_id IN (SELECT po_header_id
+                              FROM APPS.po_headers_all
+                             WHERE segment1 IN ('66653'))
+       AND LINE_NUM = 2
 								 
 /* Open PO or not viseble Receipt */
 BEGIN
@@ -1342,9 +1389,9 @@ UPDATE PO.RCV_SHIPMENT_HEADERS rsh
            WHERE     1 = 1
                  --AND POH.PO_HEADER_ID in (240193)
                  --AND PO_ST.PO_CREATION_DATE BETWEEN TO_DATE('01.01.2021','DD.MM.RRRR') AND TO_DATE('30.04.2023','DD.MM.RRRR')
-                 AND PLL.NEED_BY_DATE BETWEEN TO_DATE ('01.01.2021',
+                 AND PLL.NEED_BY_DATE BETWEEN TO_DATE ('01.01.2026',
                                                        'DD.MM.RRRR')
-                                          AND TO_DATE ('01.01.2021',
+                                          AND TO_DATE ('01.01.2026',
                                                        'DD.MM.RRRR')
                  AND POH.TYPE_LOOKUP_CODE = 'STANDARD'
                  AND POH.PO_HEADER_ID = POL.PO_HEADER_ID
@@ -2003,6 +2050,7 @@ WHERE     LINE_LOCATION_ID IN
                 WHERE po_header_id IN (SELECT po_header_id
                                         FROM po_headers_all
                                         WHERE segment1 IN ( :PO)))
+                                        AND REQUISITION_LINE_ID = '1319311'
     AND (   DESTINATION_CONTEXT != 'EXPENSE'
         OR DESTINATION_TYPE_CODE != 'EXPENSE');
 
@@ -2018,6 +2066,7 @@ WHERE     po_distribution_id IN
                 WHERE po_header_id IN (SELECT po_header_id
                                         FROM po_headers_all
                                         WHERE segment1 IN ( :PO)))
+                                        AND PO_LINE_ID = '1653103'
     AND (   DESTINATION_CONTEXT != 'EXPENSE'
         OR Destination_Type_Code != 'EXPENSE'
         OR ACCRUE_ON_RECEIPT_FLAG != 'N');
@@ -2326,14 +2375,15 @@ BEGIN
                                  WHERE segment1 IN ('37266'));
 
 
-    UPDATE PO_LINE_LOCATIONS_all
-       SET APPROVED_FLAG = 'Y',
-           CLOSED_CODE = 'OPEN',
-           approved_date = SYSDATE,
-           ENCUMBERED_FLAG = 'Y'
-     WHERE po_HEADER_ID = (SELECT po_header_id
-                                  FROM APPS.po_headers_all
-                                 WHERE segment1 IN ('37266'));
+UPDATE PO_LINE_LOCATIONS_all
+   SET APPROVED_FLAG = 'Y',
+       CLOSED_CODE = 'OPEN',
+       approved_date = SYSDATE,
+       ENCUMBERED_FLAG = 'Y'
+ --           SELECT APPROVED_FLAG,CLOSED_CODE,approved_date,ENCUMBERED_FLAG FROM PO_LINE_LOCATIONS_all
+ WHERE po_HEADER_ID IN (SELECT po_header_id
+                          FROM APPS.po_headers_all
+                         WHERE segment1 IN ('65596'));
 
     COMMIT;
 END;								 

@@ -15,6 +15,49 @@ UPDATE xla_events
                                                           47015310,
                                                           47015323)));
 
+ /* Update recreate accounting material trx*/
+UPDATE xla_events
+   SET event_status_code = 'U', process_status_code = 'I'
+ WHERE ENTITY_ID IN
+           (SELECT ENTITY_ID
+              FROM xla.xla_transaction_entities
+             WHERE     entity_code = 'MTL_ACCOUNTING_EVENTS'
+                   AND SOURCE_ID_INT_1 IN
+                           ( SELECT TRANSACTION_ID FROM inv.mtl_material_transactions
+ WHERE RCV_TRANSACTION_ID IN
+           (SELECT TRANSACTION_ID
+             FROM RCV_TRANSACTIONS
+            WHERE     TRANSACTION_TYPE = 'DELIVER'
+                  AND SHIPMENT_LINE_ID IN
+                          (SELECT SHIPMENT_LINE_ID
+                            FROM RCV_SHIPMENT_lineS
+                           WHERE SHIPMENT_HEADER_ID IN
+                                     (SELECT SHIPMENT_HEADER_ID
+                                       FROM PO.RCV_SHIPMENT_HEADERS
+                                      WHERE receipt_num IN
+                                                ('ЮМ 5530145',
+                                                 'ЮМ 5530140',
+                                                 'ЮТ 0389990',
+                                                 '002-4815398900001-2126914380'))))));                                                         
+
+/* Find All Transactions by Invetory Receipt*/
+SELECT *
+  FROM inv.mtl_material_transactions
+ WHERE RCV_TRANSACTION_ID IN
+           (SELECT TRANSACTION_ID
+             FROM RCV_TRANSACTIONS
+            WHERE     TRANSACTION_TYPE = 'DELIVER'
+                  AND SHIPMENT_LINE_ID IN
+                          (SELECT SHIPMENT_LINE_ID
+                            FROM RCV_SHIPMENT_lineS
+                           WHERE SHIPMENT_HEADER_ID IN
+                                     (SELECT SHIPMENT_HEADER_ID
+                                       FROM PO.RCV_SHIPMENT_HEADERS
+                                      WHERE receipt_num IN
+                                                ('ДЛ 2606370',
+                                                 'ЮМ 1451041',
+                                                 'ДГ 1516726'))))
+
  /* Find all Material Transaction by Item and Delivery */
 SELECT TRANSACTION_ID -- Block find TR by Move Order
   FROM mtl_material_transactions
@@ -484,3 +527,77 @@ SELECT *
 begin
 xxtg_online_transaction_storno.transaction_storno_by_set(48499477, 'SINGLE');
 end;
+
+
+BEGIN
+    FOR AAA_LOT_NUMBER
+        IN (SELECT mtl.LOT_NUMBER AS NEW_LOT, mt.TRANSACTION_ID AS TR_ID
+              FROM INV.MTL_TRANSACTION_ACCOUNTS   TA,
+                   inv.mtl_material_transactions  mt
+                   JOIN inv.mtl_transaction_lot_numbers mtl
+                       ON mt.transaction_id = mtl.transaction_id
+             WHERE     TA.TRANSACTION_ID = mt.TRANSACTION_ID
+                   AND TA.TRANSACTION_DATE BETWEEN TO_DATE ('01.08.2026',
+                                                            'dd.mm.yyyy')
+                                               AND TO_DATE ('15.09.2026',
+                                                            'dd.mm.yyyy')
+                   AND TA.BASE_TRANSACTION_VALUE != 0
+                         AND mtl.LOT_NUMBER = '260807Комплектование456671'
+                                                     )
+    LOOP
+        UPDATE BOM.CST_INV_LAYERS a
+           SET a.layer_cost =
+                   (SELECT UNIT_COST
+                      FROM XXTG.xxtg_unit_cost
+                     WHERE     LOT_NUMBER = AAA_LOT_NUMBER.NEW_LOT
+                           AND CURRENCY_CODE = 'BYN')
+         WHERE     1 = 1
+               AND CREATE_TRANSACTION_ID IN
+                       (SELECT DISTINCT cil.create_transaction_id
+                          FROM inv.mtl_transaction_lot_numbers  mtlnn,
+                               bom.cst_inv_layers               cil,
+                               inv.mtl_material_transactions    mt,
+                               inv.mtl_system_items_b           msib
+                         WHERE     1 = 1
+                               AND cil.create_transaction_id =
+                                   mt.transaction_id
+                               AND cil.organization_id = mt.organization_id
+                               AND cil.inventory_item_id =
+                                   mt.inventory_item_id
+                               AND msib.inventory_item_id =
+                                   cil.inventory_item_id
+                               AND mt.transaction_quantity >= 0
+                               AND mtlnn.transaction_id = mt.transaction_id
+                               AND mtlnn.lot_number = AAA_LOT_NUMBER.NEW_LOT)
+               AND a.layer_cost !=
+                   (SELECT UNIT_COST
+                      FROM XXTG.xxtg_unit_cost
+                     WHERE     LOT_NUMBER = AAA_LOT_NUMBER.NEW_LOT
+                           AND CURRENCY_CODE = 'BYN');
+
+        DBMS_OUTPUT.put_line (
+               'UPDATE CST_INV_LAYERS by LOT                                       '
+            || AAA_LOT_NUMBER.NEW_LOT);
+
+        UPDATE inv.mtl_transaction_accounts
+           SET RATE_OR_AMOUNT =
+                   (SELECT UNIT_COST
+                      FROM XXTG.xxtg_unit_cost
+                     WHERE     LOT_NUMBER = AAA_LOT_NUMBER.NEW_LOT
+                           AND CURRENCY_CODE = 'BYN'),
+               BASE_TRANSACTION_VALUE =
+                     primary_quantity
+                   * (SELECT UNIT_COST
+                        FROM XXTG.xxtg_unit_cost
+                       WHERE     LOT_NUMBER = AAA_LOT_NUMBER.NEW_LOT
+                             AND CURRENCY_CODE = 'BYN')
+         WHERE transaction_id = AAA_LOT_NUMBER.TR_ID;
+
+        DBMS_OUTPUT.put_line (
+               'UPDATE mtl_transaction_accounts by TRANSACTION_ID   '
+            || AAA_LOT_NUMBER.TR_ID);
+
+         DBMS_OUTPUT.put_line (
+               '________________________________________________________________');
+    END LOOP;
+END;

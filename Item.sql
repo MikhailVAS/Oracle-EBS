@@ -327,7 +327,35 @@ FROM  --APPS.mtl_item_categories mic,
   AND  MCB.CONCATENATED_SEGMENTS != 'Inventory'
 --MIC.INVENTORY_ITEM_ID = a.INVENTORY_ITEM_ID
 --AND  CONCATENATED_SEGMENTS = 'Capex.ICT.Hardware.Office/Personal Systems.Technical Office Equipment.Desktop Computer.Other.Other'
---ORDER BY MCB.LAST_UPDATE_DATE DESC        
+--ORDER BY MCB.LAST_UPDATE_DATE DESC       
+
+
+/* All Item by PO Item Category */
+SELECT DISTINCT
+       a.SEGMENT1,
+       a.DESCRIPTION,
+       (SELECT DISTINCT ID_FLEX_STRUCTURE_NAME
+         FROM APPS.FND_ID_FLEX_STRUCTURES_VL FIFS
+        WHERE     MCB.STRUCTURE_ID = FIFS.ID_FLEX_NUM
+              AND FIFS.APPLICATION_ID = 401
+              AND FIFS.ID_FLEX_CODE = 'MCAT')    "Item Category Assignment",
+       MCB.CONCATENATED_SEGMENTS,
+       MCB.ENABLED_FLAG,
+       MCB.ATTRIBUTE1                            "Local Account",
+       MCB.ATTRIBUTE2                            "In Use Account",
+       MCB.ATTRIBUTE3                            "Analytic Account",
+       MCB.ATTRIBUTE4                            "Detail Account",
+       MCB.ATTRIBUTE13                           "Type of activity",
+       MCB.ATTRIBUTE7                            "Vat Rate Reporting"
+  FROM inv.mtl_system_items_b  a
+       LEFT JOIN APPS.mtl_item_categories mic
+           ON MIC.INVENTORY_ITEM_ID = a.INVENTORY_ITEM_ID
+       LEFT JOIN APPS.MTL_CATEGORIES_B_KFV MCB
+           ON MCB.CATEGORY_ID = MIC.CATEGORY_ID
+ WHERE     1 = 1                                --a.SEGMENT1 IN ('1001025477')
+       AND MCB.CONCATENATED_SEGMENTS IN
+               ('Other.Financial.Bank Fees.General.General.General.General.General',
+                'Other.Bank commission.2600.Taxes.Undefined.Undefined.Undefined.Undefined ')
 		 
 /* Item Category Assignment2 */
 SELECT DISTINCT

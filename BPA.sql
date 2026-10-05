@@ -64,3 +64,34 @@ ORDER BY pha.segment1
          AND pha.closed_code IS NULL
 GROUP BY pha.segment1, pha.creation_date;
 
+
+SELECT 
+    pha.segment1 AS blanket_po_num,
+    pra.release_num,
+    (SELECT DISTINCT a.SEGMENT1 
+                                  FROM inv.mtl_system_items_b a
+                                 WHERE  INVENTORY_ITEM_ID  = POL.ITEM_ID) AS Item,
+                                 POL.ITEM_DESCRIPTION,
+--    plla.line_location_id,
+    plla.quantity AS released_quantity,
+    plla.QUANTITY_RECEIVED AS QUANTITY_RECEIVED,
+--    plla.ship_to_location_id,
+    POL.UNIT_PRICE AS "Price IN BPA PO",
+    pllA.PRICE_OVERRIDE AS "Price in PO_Release",
+--    POL.*
+--    plla.*
+FROM 
+    po_headers_all pha,
+    PO_LINES_ALL POL,
+    po_releases_all pra,
+    po_line_locations_all plla
+WHERE 
+    pha.po_header_id = pra.po_header_id
+    AND pra.po_release_id = plla.po_release_id
+    AND pha.PO_HEADER_ID = POL.PO_HEADER_ID
+AND POL.PO_LINE_ID = plla.PO_LINE_ID
+    AND pha.po_HEADER_ID IN (SELECT po_header_id
+                          FROM PO.po_headers_all
+                         WHERE segment1 IN ('61375'))
+                         ORDER BY pra.release_num
+

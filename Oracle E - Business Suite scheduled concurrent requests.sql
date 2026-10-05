@@ -1,3 +1,26 @@
+/* Cuncurrent NOW ! */
+  SELECT r.request_id,
+         p.concurrent_program_name
+             AS prog_short,
+         p.user_concurrent_program_name
+             AS program,
+         u.user_name
+             AS requested_by,
+         r.actual_start_date,
+         ROUND ((SYSDATE - r.actual_start_date) * 24 * 60, 1)
+             AS mins_running,
+         r.phase_code,
+         r.status_code,
+         r.argument_text
+    FROM apps.fnd_concurrent_requests r
+         JOIN apps.fnd_concurrent_programs_vl p
+             ON     p.concurrent_program_id = r.concurrent_program_id
+                AND p.application_id = r.program_application_id
+         JOIN apps.fnd_user u ON u.user_id = r.requested_by
+   WHERE r.phase_code = 'R'                                     -- Running now
+                            AND r.status_code = 'R'
+ORDER BY mins_running DESC, r.request_id;
+
 --Query to find Oracle E - Business Suite scheduled concurrent requests:
 
 select r.request_id, 

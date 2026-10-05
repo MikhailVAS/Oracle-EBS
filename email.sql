@@ -1,0 +1,16 @@
+/* WF update email*/
+UPDATE WF_LOCAL_ROLES
+   SET EMAIL_ADDRESS = REPLACE (EMAIL_ADDRESS, '@life.com.by', '@life.by')
+ WHERE EMAIL_ADDRESS LIKE '%@life.com.by' AND EMAIL_ADDRESS IS NOT NULL
+
+/* fnd_user update email*/
+UPDATE fnd_user
+   SET EMAIL_ADDRESS = REPLACE (EMAIL_ADDRESS, '@life.com.by', '@life.by')
+ WHERE EMAIL_ADDRESS LIKE '%@life.com.by' AND EMAIL_ADDRESS IS NOT NULL
+-- AND END_DATE IS NULL 
+
+/* PER_ALL_PEOPLE_F update email*/
+UPDATE PER_ALL_PEOPLE_F
+   SET EMAIL_ADDRESS = REPLACE (EMAIL_ADDRESS, '@life.com.by', '@life.by')
+ WHERE  EMAIL_ADDRESS LIKE '%@life.com.by' AND EMAIL_ADDRESS IS NOT NULL
+ AND EFFECTIVE_END_DATE IS NOT NULL  AND EFFECTIVE_END_DATE != to_date('31.12.4712','dd.mm.yyyy') 

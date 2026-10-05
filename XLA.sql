@@ -59,6 +59,28 @@ UPDATE xla_events
                                                                                   ('МЛ 0302064')   --Deliver Name TTN
                                                                           AND TDA.DELIVERY_ID =
                                                                               TND.DELIVERY_ID))))));
+
+
+/* AP PO receipt re-accounting */
+UPDATE xla_events
+   SET event_status_code = 'U', process_status_code = 'I'
+ WHERE ENTITY_ID IN
+           (SELECT ENTITY_ID
+             FROM xla.xla_transaction_entities
+            WHERE     entity_code = 'AP_INVOICES'
+                  AND SOURCE_ID_INT_1 IN
+                          (SELECT invoice_id
+                            FROM ap_invoices_all api
+                           WHERE     gl_date >=
+                                     TO_DATE ('01072025', 'ddmmyyyy')
+                                 AND EXISTS
+                                         (SELECT 1
+                                            FROM AP_INVOICE_DISTRIBUTIONS_ALL
+                                                 apd
+                                           WHERE     LINE_TYPE_LOOKUP_CODE =
+                                                     'ACCRUAL'
+                                                 AND apd.invoice_id =
+                                                     api.invoice_id)));
                                                                               
 /* send transactions on recalculation */
 UPDATE xla_events

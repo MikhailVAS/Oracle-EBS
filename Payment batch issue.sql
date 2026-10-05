@@ -99,6 +99,50 @@ UPDATE iby_payments_all
 
  --##############################################################################
 
+ UPDATE ap.AP_PAYMENT_SCHEDULES_ALL
+   SET EXTERNAL_BANK_ACCOUNT_ID =
+           (SELECT EXT_BANK_ACCOUNT_ID
+              FROM iby_ext_bank_accounts
+             WHERE BANK_ACCOUNT_NUM = 'BY04AKBB30120209700173100000'
+             AND BANK_ACCOUNT_NAME = 'БЕЛАРУСБАНК ОАО АСБ РБ')
+--SELECT * FROM ap.AP_PAYMENT_SCHEDULES_ALL
+ WHERE invoice_id IN ( SELECT INVOICE_ID FROM  ap_invoices_all 
+where invoice_num = 'ARF:1557263')
+ 
+/* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
+UPDATE ap.AP_SELECTED_INVOICES_ALL
+   SET EXTERNAL_BANK_ACCOUNT_ID =
+           (SELECT EXT_BANK_ACCOUNT_ID
+              FROM iby_ext_bank_accounts
+             WHERE BANK_ACCOUNT_NUM = 'BY04AKBB30120209700173100000'
+             AND BANK_ACCOUNT_NAME = 'БЕЛАРУСБАНК ОАО АСБ РБ')
+--SELECT * FROM ap.AP_SELECTED_INVOICES_ALL
+ WHERE invoice_id IN ( SELECT INVOICE_ID FROM  ap_invoices_all 
+where invoice_num = 'ARF:1557263')
+
+/* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
+UPDATE ap.ap_invoices_all
+   SET EXTERNAL_BANK_ACCOUNT_ID =
+           (SELECT EXT_BANK_ACCOUNT_ID
+              FROM iby_ext_bank_accounts
+             WHERE BANK_ACCOUNT_NUM = 'BY04AKBB30120209700173100000'
+             AND BANK_ACCOUNT_NAME = 'БЕЛАРУСБАНК ОАО АСБ РБ')
+--             SELECT * FROM ap.ap_invoices_all
+ WHERE invoice_id IN ( SELECT INVOICE_ID FROM  ap_invoices_all 
+where invoice_num = 'ARF:1557263')
+
+/* Formatted on (QP5 v5.388) Service Desk 673675 Mihail.Vasiljev */
+UPDATE IBY_DOCS_PAYABLE_ALL
+   SET EXTERNAL_BANK_ACCOUNT_ID =
+           (SELECT EXT_BANK_ACCOUNT_ID
+              FROM iby_ext_bank_accounts
+             WHERE BANK_ACCOUNT_NUM = 'BY04AKBB30120209700173100000'
+             AND BANK_ACCOUNT_NAME = 'БЕЛАРУСБАНК ОАО АСБ РБ')
+             -- SELECT * FROM IBY_DOCS_PAYABLE_ALL
+ WHERE CALLING_APP_DOC_UNIQUE_REF2 IN ( SELECT INVOICE_ID FROM  ap_invoices_all 
+where invoice_num = 'ARF:1557263') 
+ --##############################################################################
+
 select * from ap.ap_invoices_all where invoice_num in ('��� 101')
 
 select * from ap.ap_invoices_all where invoice_num in ('��� 101')

@@ -1,3 +1,24 @@
+/* Find VIRT Serial Numbers */
+SELECT 'VIRT' || LPAD (TO_CHAR (MAX (sn) + 1), 10, '0')
+  --            into l_virt_serial_num
+  FROM (SELECT MAX (sn_num)     sn
+          FROM (SELECT TO_NUMBER (
+                           REGEXP_REPLACE (serial_number, '[^0-9]', ''))    sn_num
+                  FROM Mtl_serial_numbers
+                 WHERE     serial_number LIKE 'VIRT%'
+                       AND serial_number NOT LIKE 'VIRT995%')
+        UNION ALL
+        SELECT MAX (sn_num)     sn
+          FROM (SELECT TO_NUMBER (
+                           REGEXP_REPLACE (
+                               REPLACE (serial_number, 'VIRT995', ''),
+                               '[^0-9]',
+                               ''))    sn_num
+                  FROM Mtl_serial_numbers
+                 WHERE     REGEXP_LIKE (serial_number,
+                                        '^' || 'VIRT' || '[0-9]')
+                       AND serial_number LIKE 'VIRT995%'))
+
 SELECT '''' || SERIAL_NUMBER || ''','
            AS SN,
        group_mark_id,

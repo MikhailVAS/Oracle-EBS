@@ -1,9 +1,9 @@
 /* Find FIO in HRMS by USER_ID */
-SELECT FULL_NAME
+SELECT DISTINCT FULL_NAME
   FROM per_all_people_f PAPF
  WHERE PERSON_ID = (SELECT EMPLOYEE_ID
                       FROM fnd_user
-                     WHERE user_id = 7256)
+                     WHERE user_id = 6297)
 
 /* Find USER_ID by people name */
 SELECT user_id
@@ -11,6 +11,12 @@ SELECT user_id
  WHERE EMPLOYEE_ID = (SELECT DISTINCT PERSON_ID
                         FROM per_all_people_f PAPF
                        WHERE FULL_NAME LIKE '%Семейко%')  
+
+/* Update eMail */
+UPDATE fnd_user
+   SET EMAIL_ADDRESS = REPLACE (EMAIL_ADDRESS, '@life.com.by', '@life.by')
+ WHERE EMAIL_ADDRESS LIKE '%@life.com.by' AND EMAIL_ADDRESS IS NOT NULL
+ AND END_DATE IS NULL 
 
 SELECT DISTINCT pf.person_id, pf.full_name
   FROM --applsys.fnd_user fu,
@@ -169,3 +175,87 @@ INSERT INTO fnd_sessions (session_id, effective_date)
                 (SELECT 'c'
                    FROM fnd_sessions s1
                   WHERE USERENV ('sessionid') = s1.session_id));
+
+ /* All  for SOX Matrix */
+SELECT fu.user_name as Name,
+      PAPF.FIRST_NAME||PAPF.LAST_NAME Employee_Name,
+      fu.EMAIL_ADDRESS User_Attached_Email,
+      papf.email_address Emp_attached_eamil,
+       frv.responsibility_name,
+       frv.responsibility_key,
+       TO_CHAR (furgd.start_date, 'DD-MON-YYYY') "User_Resp_START_DATE",
+       TO_CHAR (furgd.end_date, 'DD-MON-YYYY') "User_resp_END_DATE",
+       fu.start_date User_start_date,
+       fu.end_date User_End_date,
+       frv.start_date resp_start_date,
+       frv.End_date resp_End_date,
+       PAPF.effective_start_date Emp_start_date,
+       PAPF.EFFECTIVE_END_DATE Emp_end_date 
+FROM apps.fnd_user fu,
+  apps.fnd_user_resp_groups_direct furgd,
+  apps.fnd_responsibility_vl frv,
+  APPS.PER_ALL_PEOPLE_F PAPF
+WHERE fu.user_id                     = furgd.user_id
+AND furgd.responsibility_id          = frv.responsibility_id
+and upper(frv.RESPONSIBILITY_NAME) like '%INVENT%'
+and fu.EMPLOYEE_ID                   =PAPF.PERSON_ID(+) -- IF USER IS AN EMPLOYEE THEN EMPLOYEE DETAILS
+AND SYSDATE BETWEEN nvl(PAPF.effective_start_date,sysdate) AND nvl(PAPF.EFFECTIVE_END_DATE,sysdate) -- EMP ACTIVE CONDITION
+AND SYSDATE BETWEEN nvl(furgd.start_date,sysdate) AND nvl(furgd.end_date,sysdate) -- USER RESPONSIBILITIES ACTIVE CONDITION
+AND SYSDATE BETWEEN nvl(fu.start_date,sysdate) AND nvl(fu.end_date,sysdate) -- USER ACTIVE CONDITION
+AND SYSDATE BETWEEN nvl(frv.start_date,sysdate) AND nvl(frv.end_date,sysdate) -- RESPONSIBILITY ACTIVE CONDITION
+order by fu.user_name,frv.responsibility_name
+
+ /*NEW All  for SOX Matrix */
+SELECT DISTINCT
+         fuser.USER_NAME
+             USER_NAME,
+         per.EMPLOYEE_NUMBER
+             "1C Num",
+         per.FULL_NAME
+             FULL_NAME,
+                      frt.RESPONSIBILITY_NAME
+             RESPONSIBILITY,
+         (SELECT DISTINCT RT.RESPONSIBILITY_NAME
+            FROM FND_RESPONSIBILITY_TL RT
+           WHERE     RT.LANGUAGE = 'RU'
+                 AND frt.RESPONSIBILITY_ID = RT.RESPONSIBILITY_ID --AND RT.SOURCE_LANG = 'RU'
+                 AND ROWNUM= 1
+                                                                 )
+             "RU RESPONSIBILITY",
+                      fuser.LAST_LOGON_DATE,
+             fuser.PASSWORD_LIFESPAN_DAYS,
+         --         fuser.user_id,
+         --         fuser.creation_date,
+         --         fuser.last_update_date,
+         fuser.START_DATE USER_START_DATE,
+         fuser.END_DATE USER_END_DATE,
+         NVL2(TO_CHAR(fuser.END_DATE), 'INACTIVE', 'ACTIVE') AS USER_STATUS,
+         --         fuser.END_DATE,
+         TO_CHAR (furg.START_DATE, 'DD-MM-YYYY')
+             resp_attched_date,
+         furg.end_date
+             resp_revoke_date,
+         furg.Description
+             description_revoke
+    --    , TO_CHAR(furg.END_DATE,'DD-MM-YYYY') resp_remove_date
+    FROM FND_USER                   fuser,
+         PER_PEOPLE_F               per,
+         fnd_user_resp_groups_direct furg,
+         FND_RESPONSIBILITY_TL      frt,
+         applsys.fnd_responsibility fr,
+         applsys.fnd_application_tl fat,
+         applsys.fnd_application    fa
+   WHERE     fuser.EMPLOYEE_ID = per.PERSON_ID (+)
+         AND fuser.USER_ID = furg.USER_ID
+--         AND (TO_CHAR (fuser.END_DATE) IS NULL OR fuser.END_DATE > SYSDATE)
+         AND frt.RESPONSIBILITY_ID = furg.RESPONSIBILITY_ID
+         AND fr.responsibility_id = frt.responsibility_id
+         AND fa.application_id = fat.application_id
+         AND fr.application_id = fat.application_id
+         AND frt.LANGUAGE = 'US'
+         --         AND furg.END_DATE IS NULL
+--         AND fuser.user_name LIKE 
+--         '%MIHAIL.VASILJEV%' --
+--         '%DENIS.KUSHNERYEV%'
+--AND per.EMPLOYEE_NUMBER IS NULL
+ORDER BY fuser.USER_NAME,per.FULL_NAME,frt.RESPONSIBILITY_NAME--,fuser.USER_NAME
