@@ -228,7 +228,80 @@ WHERE     te.entity_code = 'MTL_ACCOUNTING_EVENTS' --подстввить код
               )
 --        AND not exists (select 1  from XXTG_GL001_DOUBLE_GLOBAL where C_ENTITY_CODE = 'MTL_ACCOUNTING_EVENTS' and C_DOC_ID  = te.SOURCE_ID_INT_1)
         and (accounted_cr >0 or accounted_dr >0)
-order by ae_line_num    
+order by ae_line_num   
+
+/* 1. (Optional) Change date in AR xla_ae_headers */
+UPDATE xla_ae_headers
+   SET ACCOUNTING_DATE =
+           (SELECT TO_CHAR  (ra.trx_date)
+              FROM AR.ra_customer_trx_all ra
+             WHERE ra.trx_number = 'ИТ 0348630 - 2')
+ --SELECT * FROM xla_ae_headers
+ WHERE entity_id IN
+           (SELECT xe.ENTITY_ID
+             FROM AR.ra_customer_trx_all  rct
+                  JOIN XLA.xla_transaction_entities xte
+                      ON     xte.source_id_int_1 = rct.customer_trx_id
+                         AND xte.entity_code = 'TRANSACTIONS' -- или 'AR_TRANSACTIONS' в зависимости от версии
+                         AND xte.application_id = 222 -- 222 - это application_id для Oracle Receivables (AR)
+                  JOIN XLA.xla_events xe
+                      ON     xe.entity_id = xte.entity_id
+                         AND xe.application_id = xte.application_id
+            WHERE rct.trx_number = 'ИТ 0348630 - 2');
+            
+/* 2. (Optional) Change date in AR xla_ae_lines */
+UPDATE xla.xla_ae_lines
+   SET ACCOUNTING_DATE =
+           (SELECT TO_CHAR  (ra.trx_date)
+              FROM AR.ra_customer_trx_all ra
+             WHERE ra.trx_number = 'ИТ 0348630 - 2')
+ WHERE                               --select * from xla.xla_ae_lines  a where
+       ae_header_id IN
+           (SELECT ae_header_id
+             FROM xla.xla_ae_headers a
+            WHERE entity_id IN
+                      (SELECT xe.entity_id
+                        FROM AR.ra_customer_trx_all  rct
+                             JOIN XLA.xla_transaction_entities xte
+                                 ON     xte.source_id_int_1 =
+                                        rct.customer_trx_id
+                                    AND xte.entity_code = 'TRANSACTIONS' -- или 'AR_TRANSACTIONS' в зависимости от версии
+                                    AND xte.application_id = 222 -- 222 - это application_id для Oracle Receivables (AR)
+                             JOIN XLA.xla_events xe
+                                 ON     xe.entity_id = xte.entity_id
+                                    AND xe.application_id =
+                                        xte.application_id
+                       WHERE rct.trx_number = 'ИТ 0348630 - 2'));
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      -- Service Desk 678948
+/* 3.(Mandatory) Change date in AR xla_events and recreate accounting */
+UPDATE xla.xla_events a
+   SET event_date =
+           (SELECT TRUNC(ra.trx_date)
+              FROM AR.ra_customer_trx_all ra
+             WHERE ra.trx_number = 'ИТ 0348630 - 2'),
+        reference_date_1 = (SELECT TRUNC (ra.trx_date)
+              FROM AR.ra_customer_trx_all ra
+             WHERE ra.trx_number = 'ИТ 0348630 - 2'),
+       transaction_date =
+           (SELECT TRUNC (ra.trx_date)
+              FROM AR.ra_customer_trx_all ra
+             WHERE ra.trx_number = 'ИТ 0348630 - 2'),
+       event_status_code = 'U',
+       process_status_code = 'I'                 -- Update recreate accounting
+ --       SELECT * FROM xla.xla_events
+ WHERE entity_id IN
+           (SELECT xe.ENTITY_ID
+             FROM AR.ra_customer_trx_all  rct
+                  JOIN XLA.xla_transaction_entities xte
+                      ON     xte.source_id_int_1 = rct.customer_trx_id
+                         AND xte.entity_code = 'TRANSACTIONS' -- или 'AR_TRANSACTIONS' в зависимости от версии
+                         AND xte.application_id = 222 -- 222 - это application_id для Oracle Receivables (AR)
+                  JOIN XLA.xla_events xe
+                      ON     xe.entity_id = xte.entity_id
+                         AND xe.application_id = xte.application_id
+            WHERE rct.trx_number = 'ИТ 0348630 - 2');
+
 
 
 /* Find all XLA by AP invoice*/ 
